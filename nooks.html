@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CEO Operating-Cadence Cockpit — Nooks Chief of Staff</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --panel:#ffffff; --panel-2:#fbfcfe; --ink:#111827; --muted:#5b6472;
+    --line:#e5e8ee; --accent:#6d4bf6; --accent-soft:#efeaff;
+    --good:#158a5a; --good-soft:#e4f5ec; --warn:#c23b3b; --warn-soft:#fbe8e8;
+    --amber:#b7791f; --amber-soft:#fbf1dd;
+    --deleg:#2f6df6; --deleg-soft:#e7f0ff; --esc:#c23b3b; --esc-soft:#fbe8e8;
+    --shadow:0 1px 2px rgba(16,24,40,.06),0 8px 24px rgba(16,24,40,.06);
+    --radius:14px;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#0e1116; --panel:#161b23; --panel-2:#1b212b; --ink:#e8ecf2; --muted:#9aa4b2;
+      --line:#252c37; --accent:#9b83ff; --accent-soft:#241d40;
+      --good:#3fbe86; --good-soft:#12281f; --warn:#f0716f; --warn-soft:#2c1719;
+      --amber:#e0b155; --amber-soft:#2c2413;
+      --deleg:#5b8cff; --deleg-soft:#17233d; --esc:#f0716f; --esc-soft:#2c1719;
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.35);
+    }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased; padding:28px 18px 60px;
+  }
+  .wrap{max-width:1120px;margin:0 auto}
+  header.top{margin-bottom:20px}
+  .eyebrow{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+  h1{font-size:clamp(22px,3.4vw,30px);line-height:1.15;margin:6px 0 8px;font-weight:700;letter-spacing:-.02em}
+  .sub{color:var(--muted);max-width:74ch;margin:0}
+
+  /* control bar */
+  .bar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;
+    margin:20px 0 8px;padding:12px 14px;background:var(--panel);border:1px solid var(--line);
+    border-radius:12px;box-shadow:var(--shadow)}
+  .bar-left,.bar-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .chip{border:1px solid var(--line);background:transparent;color:var(--muted);padding:7px 12px;border-radius:999px;
+    font-size:13px;font-weight:600;cursor:pointer;transition:.15s;white-space:nowrap}
+  .chip:hover{border-color:var(--accent)}
+  .chip.active{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+  .seg button{border:0;background:transparent;color:var(--muted);padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer}
+  .seg button.active{background:var(--accent);color:#fff}
+  .search{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:6px 12px;background:var(--panel-2)}
+  .search input{border:0;background:transparent;outline:none;color:var(--ink);font-size:13px;width:150px}
+  .search svg{opacity:.5;flex-shrink:0}
+  .weeklabel{font-size:13px;color:var(--muted);font-weight:600}
+
+  /* metric row */
+  h2.section{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:24px 0 12px;font-weight:600;
+    display:flex;align-items:center;gap:8px}
+  h2.section .tag{font-size:10px;letter-spacing:.04em;background:var(--good-soft);color:var(--good);padding:2px 7px;border-radius:6px;text-transform:none;font-weight:700}
+  .metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+  @media (max-width:900px){.metrics{grid-template-columns:repeat(2,1fr)}}
+  @media (max-width:520px){.metrics{grid-template-columns:1fr}}
+  .metric{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
+    padding:16px;cursor:pointer;transition:.15s;position:relative}
+  .metric:hover{transform:translateY(-2px);border-color:var(--accent)}
+  .metric.flagged{border-color:var(--warn);box-shadow:0 0 0 1px var(--warn),var(--shadow)}
+  .metric .mlab{font-size:12.5px;color:var(--muted);font-weight:600;display:flex;justify-content:space-between;align-items:center;gap:6px}
+  .metric .mnum{font-size:clamp(22px,3vw,28px);font-weight:750;letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin:8px 0 2px}
+  .metric .mdelta{font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums}
+  .up{color:var(--good)} .down{color:var(--warn)} .flatd{color:var(--muted)}
+  .spark{margin-top:10px;height:34px;width:100%;display:block}
+  .untouched{font-size:10px;font-weight:700;color:var(--good);background:var(--good-soft);padding:2px 6px;border-radius:5px;white-space:nowrap}
+  .flagbtn{position:absolute;top:12px;right:12px;border:0;background:transparent;cursor:pointer;font-size:15px;opacity:.35;padding:2px;line-height:1}
+  .flagbtn:hover,.metric.flagged .flagbtn{opacity:1}
+
+  /* two-column boards */
+  .boards{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:16px;align-items:start}
+  @media (max-width:900px){.boards{grid-template-columns:1fr}}
+  .board{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+  .board .bhead{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .board .bhead h3{margin:0;font-size:14px;font-weight:700;letter-spacing:-.01em}
+  .board .bhead .count{font-size:12px;color:var(--muted);font-weight:600;background:var(--panel-2);border:1px solid var(--line);padding:2px 9px;border-radius:999px}
+  .board .blist{padding:8px;max-height:none}
+
+  /* decision rows */
+  .row-item{border:1px solid var(--line);border-radius:11px;padding:11px 12px;margin:6px;cursor:pointer;transition:.12s;background:var(--panel-2)}
+  .row-item:hover{border-color:var(--accent)}
+  .ri-top{display:flex;align-items:center;gap:8px;justify-content:space-between}
+  .ri-title{font-size:13.5px;font-weight:650;line-height:1.3}
+  .badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;white-space:nowrap;letter-spacing:.02em}
+  .b-deleg{background:var(--deleg-soft);color:var(--deleg)}
+  .b-esc{background:var(--esc-soft);color:var(--esc)}
+  .ri-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:7px;align-items:center}
+  .pill{font-size:11px;color:var(--muted);background:var(--panel);border:1px solid var(--line);padding:2px 8px;border-radius:999px;font-weight:600}
+  .fn-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px;vertical-align:middle}
+  .ri-detail{font-size:12.5px;color:var(--muted);line-height:1.55;margin-top:9px;padding-top:9px;border-top:1px dashed var(--line);display:none}
+  .row-item.open .ri-detail{display:block}
+  .row-item.open{background:var(--panel);border-color:var(--accent)}
+  .caret{font-size:11px;color:var(--muted);transition:transform .15s;flex-shrink:0}
+  .row-item.open .caret{transform:rotate(90deg)}
+
+  /* unowned problems */
+  .prob{border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:11px;padding:11px 12px;margin:6px;background:var(--panel-2);transition:.15s}
+  .prob.routed{border-left-color:var(--good);opacity:.92}
+  .prob .p-title{font-size:13.5px;font-weight:650;line-height:1.3}
+  .prob .p-sub{font-size:12px;color:var(--muted);margin-top:5px;line-height:1.5}
+  .p-actions{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
+  .p-actions select{font-size:12px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font-weight:600}
+  .assignbtn{font-size:12px;font-weight:700;padding:6px 12px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer}
+  .assignbtn:hover{filter:brightness(1.08)}
+  .assignbtn.done{background:var(--good);border-color:var(--good);cursor:default}
+  .routed-note{font-size:12px;font-weight:700;color:var(--good);display:flex;align-items:center;gap:6px}
+  .age{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:5px;background:var(--amber-soft);color:var(--amber)}
+  .age.hot{background:var(--warn-soft);color:var(--warn)}
+  .empty{padding:26px 16px;text-align:center;color:var(--muted);font-size:13px}
+
+  .prov{margin-top:22px}
+  .prov .pad{padding:18px 20px}
+  .prov p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.65}
+  .prov b{color:var(--ink)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+  footer{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);
+    font-size:12.5px;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  footer a{color:var(--accent);text-decoration:none;font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow">Nooks · Chief of Staff to the CEO</div>
+    <h1>CEO operating-cadence cockpit</h1>
+    <p class="sub">One screen, every Monday. The numbers that reach the CEO <em>untouched</em>, the decisions that got
+      delegated vs. escalated to them this week, and the cross-functional problems that still have no owner. At 400+ people
+      and 1,200 customers, the Chief of Staff <em>is</em> the operating rhythm — this is that job made concrete before day one.
+      Filter it, search it, route the loose problems.</p>
+  </header>
+
+  <!-- CONTROL BAR -->
+  <div class="bar">
+    <div class="bar-left" id="fnChips">
+      <button class="chip active" data-fn="all">All functions</button>
+      <button class="chip" data-fn="GTM"><span class="fn-dot" style="background:#2f6df6"></span>GTM</button>
+      <button class="chip" data-fn="Product"><span class="fn-dot" style="background:#6d4bf6"></span>Product</button>
+      <button class="chip" data-fn="Eng"><span class="fn-dot" style="background:#158a5a"></span>Eng</button>
+      <button class="chip" data-fn="People"><span class="fn-dot" style="background:#b7791f"></span>People</button>
+      <button class="chip" data-fn="Finance"><span class="fn-dot" style="background:#c23b3b"></span>Finance</button>
+    </div>
+    <div class="bar-right">
+      <div class="search">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input id="search" type="text" placeholder="Search decisions & problems…" autocomplete="off">
+      </div>
+      <div class="seg" id="weekSeg">
+        <button data-week="this" class="active">This week</button>
+        <button data-week="last">Last week</button>
+      </div>
+    </div>
+  </div>
+  <div class="weeklabel" id="weekLabel"></div>
+
+  <!-- METRICS -->
+  <h2 class="section">Numbers that reach the CEO <span class="tag">untouched — raw, no massaging</span></h2>
+  <div class="metrics" id="metrics"></div>
+
+  <!-- BOARDS -->
+  <h2 class="section">The week's judgment calls &amp; loose ends</h2>
+  <div class="boards">
+    <section class="board">
+      <div class="bhead">
+        <h3>Decisions — delegated vs. escalated</h3>
+        <span class="count" id="decCount"></span>
+      </div>
+      <div class="blist" id="decList"></div>
+    </section>
+
+    <section class="board">
+      <div class="bhead">
+        <h3>Problems without an owner</h3>
+        <span class="count" id="probCount"></span>
+      </div>
+      <div class="blist" id="probList"></div>
+    </section>
+  </div>
+
+  <!-- PROVENANCE -->
+  <div class="prov card"><div class="pad">
+    <p><b>What's real vs. illustrative.</b> The company scale this cockpit is sized for — <b>400+ people, 1,200 customers,
+      post–Series B</b> — and the idea of tracking <b>rep adoption of Nooks' own outbound product</b> (Nooks selling to teams
+      like HubSpot and Deel) come from Nooks' own public framing. <b>Every metric value, decision, owner, and unowned
+      problem below is illustrative</b> — realistic post–Series-B examples to show the operating rhythm, not real Nooks data.
+      The tool is the reasoning, not a claim about Nooks' internal numbers.<br><br>
+      <b>Why this shape.</b> Nooks frames its product as human judgment with AI execution; a Chief of Staff owns the
+      judgment-heavy problems that fall between teams as a company scales. Built by someone who has made leadership legible
+      before — UnitedHealthcare exec dashboards that embedded human oversight at every decision point, and Swaayata, where
+      the whole design was instrumenting the moments that actually matter and making every autonomous action visible,
+      reversible, and explainable.</p>
+  </div></div>
+
+  <footer>
+    <span>Made by Shrutika Rajput — <a href="https://shrutikarajput.com" target="_blank" rel="noopener">shrutikarajput.com</a></span>
+    <span>All metric values, decisions &amp; problems are illustrative; company scale (400+ / 1,200) is Nooks' public framing.</span>
+  </footer>
+</div>
+
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var FN_COLORS = {GTM:"#2f6df6",Product:"#6d4bf6",Eng:"#158a5a",People:"#b7791f",Finance:"#c23b3b"};
+
+  // ---- ILLUSTRATIVE DATA (post-Series-B examples; not real Nooks numbers) ----
+  // Metrics reach the CEO "untouched" = raw source-of-truth, no team spin.
+  var METRICS = {
+    "this": [
+      {key:"pipe", lab:"Qualified pipeline", fn:"GTM", val:"$18.4M", num:18.4, prev:16.9, unit:"M", untouched:true,
+        spark:[12.1,13.4,13.0,14.8,15.6,16.9,18.4], note:"New-logo + expansion, stage ≥ 3. Straight from CRM, unrolled-up."},
+      {key:"arr", lab:"Net-new ARR (QTD)", fn:"Finance", val:"$4.9M", num:4.9, prev:4.9, unit:"M", untouched:true,
+        spark:[0.6,1.4,2.2,3.0,3.7,4.9,4.9], note:"Booked, not forecast. Flat wk/wk — two deals slipped to next week (see escalations)."},
+      {key:"adopt", lab:"Rep adoption of Nooks", fn:"GTM", val:"71%", num:71, prev:64, unit:"%", untouched:true,
+        spark:[52,55,58,60,61,64,71], note:"Nooks' own GTM reps active on Nooks' outbound product this week. The dogfood number — most credible proof-of-value story for the board."},
+      {key:"gross", lab:"Gross retention (TTM)", fn:"Finance", val:"93%", num:93, prev:94, unit:"%", untouched:true,
+        spark:[95,95,94,94,94,94,93], note:"Dollar-based. Down 1pt on one mid-market churn — flagged to CX, no CEO action needed yet."}
+    ],
+    "last": [
+      {key:"pipe", lab:"Qualified pipeline", fn:"GTM", val:"$16.9M", num:16.9, prev:15.6, unit:"M", untouched:true,
+        spark:[10.8,12.1,13.4,13.0,14.8,15.6,16.9], note:"New-logo + expansion, stage ≥ 3. Straight from CRM, unrolled-up."},
+      {key:"arr", lab:"Net-new ARR (QTD)", fn:"Finance", val:"$4.9M", num:4.9, prev:3.7, unit:"M", untouched:true,
+        spark:[0.4,0.9,1.7,2.5,3.1,3.7,4.9], note:"Booked, not forecast. Big enterprise close landed Thursday."},
+      {key:"adopt", lab:"Rep adoption of Nooks", fn:"GTM", val:"64%", num:64, prev:61, unit:"%", untouched:true,
+        spark:[48,52,55,58,60,61,64], note:"Nooks' own GTM reps active on Nooks' outbound product. Rollout to the new SDR cohort still ramping."},
+      {key:"gross", lab:"Gross retention (TTM)", fn:"Finance", val:"94%", num:94, prev:94, unit:"%", untouched:true,
+        spark:[95,95,95,94,94,94,94], note:"Dollar-based. Holding steady."}
+    ]
+  };
+
+  var DECISIONS = {
+    "this": [
+      {t:"Discount floor on the Deel-tier renewal", fn:"GTM", type:"esc", owner:"CEO",
+       d:"AE pushed for 22% off to close by quarter-end. Above the 15% delegated threshold, so it escalated. CEO holds — offered 12% + a 2-yr term instead. This is the kind of judgment call that shouldn't reach the CEO twice; raising the delegated floor to 18% for renewals is on next week's list."},
+      {t:"Reallocate 2 eng from platform to the agent-quality push", fn:"Eng", type:"deleg", owner:"VP Eng",
+       d:"Delegated to VP Eng under the standing 'staffing within a function' rule. Logged here only so the CEO sees the shift; agent-response quality is the quarter's stated priority, so this is consistent, not a surprise."},
+      {t:"Pause the outbound-to-HubSpot case-study launch", fn:"Product", type:"esc", owner:"CEO",
+       d:"Legal flagged a logo-usage question. Escalated because it touches a marquee customer relationship. CEO decision: pause 1 week, get written sign-off, relaunch — don't kill it."},
+      {t:"Approve People-ops backfill for the SDR-manager role", fn:"People", type:"deleg", owner:"Head of People",
+       d:"Within headcount plan and budget — delegated. Surfaced here because SDR-manager ramp directly gates the rep-adoption number the CEO watches."},
+      {t:"Sign the SOC 2 Type II auditor SOW", fn:"Finance", type:"deleg", owner:"Head of Finance",
+       d:"Under the delegated spend authority; routine. Loop-closed here so the CEO knows the enterprise-security workstream is moving without having to ask."}
+    ],
+    "last": [
+      {t:"Green-light the usage-based pricing pilot (3 accounts)", fn:"Finance", type:"esc", owner:"CEO",
+       d:"Pricing-model change escalated by design — it affects the ARR definition the board sees. CEO approved a bounded 3-account pilot with a 60-day read before any broader rollout."},
+      {t:"Move the weekly GTM forecast call to async", fn:"GTM", type:"deleg", owner:"VP Sales",
+       d:"Process change inside GTM — delegated. Noted so the CEO isn't surprised the meeting's off their calendar."},
+      {t:"Hire freeze exception for a staff infra engineer", fn:"Eng", type:"esc", owner:"CEO",
+       d:"Any freeze exception escalates. Approved — reliability risk on the agent runtime outweighed the freeze. Tied to an unowned problem from two weeks ago (now routed)."}
+    ]
+  };
+
+  var PROBLEMS = {
+    "this": [
+      {t:"No owner for the customer-facing 'agent made a mistake' escalation path", fn:"Product", age:11,
+       sub:"Support, Product, and Eng each think another team owns what happens when a customer disputes an autonomous action. Falls exactly between teams — a judgment surface with no name on it.",
+       suggest:["Head of Support","VP Product","VP Eng"]},
+      {t:"Rep-adoption dip in the new SDR cohort is un-triaged", fn:"GTM", age:6,
+       sub:"Adoption is up overall but the July SDR cohort is 20pts behind. Nobody owns finding out whether it's enablement, product friction, or manager coverage.",
+       suggest:["VP Sales","Head of Enablement","Head of People"]},
+      {t:"Board-deck 'capacity → revenue' bridge has no single author", fn:"Finance", age:4,
+       sub:"Finance owns the numbers, GTM owns the pipeline story, Product owns capacity — but no one owns stitching them into the one narrative the next board deck needs.",
+       suggest:["Head of Finance","Chief of Staff","VP Product"]},
+      {t:"Cross-team on-call for the agent runtime is informal", fn:"Eng", age:9,
+       sub:"When the runtime degrades at 2am it currently pages whoever's awake. No owned rotation, no defined severity ladder. Surfaced after last week's near-miss.",
+       suggest:["VP Eng","Head of Platform"]}
+    ],
+    "last": [
+      {t:"Reliability risk on the agent runtime has no staffed owner", fn:"Eng", age:14,
+       sub:"Recurring degradation with no dedicated infra owner. (Routed last week → drove the staff-infra freeze exception now approved.)",
+       suggest:["VP Eng","Head of Platform"]},
+      {t:"Nobody owns the internal dogfood-adoption dashboard", fn:"GTM", age:8,
+       sub:"The most credible proof-of-value story for the board — Nooks reps using Nooks — and no one owns keeping the view current.",
+       suggest:["Chief of Staff","VP Sales","Head of Enablement"]}
+    ]
+  };
+
+  // ---- STATE ----
+  var week = "this";
+  var fnFilter = "all";
+  var query = "";
+  var flagged = {};                 // metric key -> bool
+  var routed = {};                  // "week::index" -> owner string
+
+  // ---- helpers ----
+  function matchFn(fn){ return fnFilter==="all" || fn===fnFilter; }
+  function matchQ(txt){ return !query || txt.toLowerCase().indexOf(query)>-1; }
+  function sparkPath(vals, w, h){
+    var min=Math.min.apply(null,vals), max=Math.max.apply(null,vals), rng=(max-min)||1;
+    var step=w/(vals.length-1);
+    return vals.map(function(v,i){
+      var x=i*step, y=h-4-((v-min)/rng)*(h-8);
+      return (i?"L":"M")+x.toFixed(1)+" "+y.toFixed(1);
+    }).join(" ");
+  }
+
+  // ---- render metrics ----
+  function renderMetrics(){
+    var host=$("metrics"); host.innerHTML="";
+    var data=METRICS[week];
+    var shown=0;
+    data.forEach(function(m){
+      if(!matchFn(m.fn)) return;
+      shown++;
+      var delta=m.num-m.prev;
+      var dir=delta>0?"up":(delta<0?"down":"flatd");
+      var arrow=delta>0?"▲":(delta<0?"▼":"—");
+      var dtxt;
+      if(m.unit==="%"){ dtxt=(delta>0?"+":"")+delta.toFixed(0)+" pts wk/wk"; }
+      else { dtxt=(delta>0?"+$":(delta<0?"−$":"$"))+Math.abs(delta).toFixed(1)+m.unit+" wk/wk"; }
+      if(delta===0) dtxt="flat wk/wk";
+      var col=FN_COLORS[m.fn]||"var(--accent)";
+      var isFlag=!!flagged[m.key];
+      var el=document.createElement("div");
+      el.className="metric"+(isFlag?" flagged":"");
+      el.innerHTML=
+        '<button class="flagbtn" title="Flag for the CEO\'s attention">'+(isFlag?"🚩":"⚐")+'</button>'+
+        '<div class="mlab"><span><span class="fn-dot" style="background:'+col+'"></span>'+m.lab+'</span>'+
+          (m.untouched?'<span class="untouched">untouched</span>':'')+'</div>'+
+        '<div class="mnum">'+m.val+'</div>'+
+        '<div class="mdelta '+dir+'">'+arrow+' '+dtxt+'</div>'+
+        '<svg class="spark" viewBox="0 0 120 34" preserveAspectRatio="none">'+
+          '<path d="'+sparkPath(m.spark,120,34)+'" fill="none" stroke="'+col+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="'+(isFlag?1:.85)+'"/>'+
+        '</svg>';
+      // toggle detail via title flip
+      el.addEventListener("click", function(e){
+        if(e.target.classList.contains("flagbtn")) return;
+        alert(m.lab+" — "+m.note);
+      });
+      el.querySelector(".flagbtn").addEventListener("click", function(e){
+        e.stopPropagation();
+        flagged[m.key]=!flagged[m.key];
+        renderMetrics();
+      });
+      host.appendChild(el);
+    });
+    if(!shown) host.innerHTML='<div class="empty" style="grid-column:1/-1">No metrics owned by this function.</div>';
+  }
+
+  // ---- render decisions ----
+  function renderDecisions(){
+    var host=$("decList"); host.innerHTML="";
+    var data=DECISIONS[week];
+    var n=0;
+    data.forEach(function(x){
+      var hay=x.t+" "+x.d+" "+x.owner+" "+x.fn;
+      if(!matchFn(x.fn) || !matchQ(hay)) return;
+      n++;
+      var col=FN_COLORS[x.fn]||"var(--accent)";
+      var el=document.createElement("div");
+      el.className="row-item";
+      el.innerHTML=
+        '<div class="ri-top">'+
+          '<span class="ri-title">'+x.t+'</span>'+
+          '<span class="badge '+(x.type==="deleg"?"b-deleg":"b-esc")+'">'+(x.type==="deleg"?"DELEGATED":"ESCALATED")+'</span>'+
+        '</div>'+
+        '<div class="ri-meta">'+
+          '<span class="pill"><span class="fn-dot" style="background:'+col+'"></span>'+x.fn+'</span>'+
+          '<span class="pill">Owner: '+x.owner+'</span>'+
+          '<span class="caret">▶</span>'+
+        '</div>'+
+        '<div class="ri-detail">'+x.d+'</div>';
+      el.addEventListener("click", function(){ el.classList.toggle("open"); });
+      host.appendChild(el);
+    });
+    $("decCount").textContent=n+" this "+(week==="this"?"week":"prior wk");
+    if(!n) host.innerHTML='<div class="empty">No decisions match this filter.</div>';
+  }
+
+  // ---- render problems ----
+  function renderProblems(){
+    var host=$("probList"); host.innerHTML="";
+    var data=PROBLEMS[week];
+    var n=0, openCount=0;
+    data.forEach(function(x,idx){
+      var hay=x.t+" "+x.sub+" "+x.fn;
+      if(!matchFn(x.fn) || !matchQ(hay)) return;
+      n++;
+      var rk=week+"::"+idx;
+      var isRouted=!!routed[rk];
+      if(!isRouted) openCount++;
+      var col=FN_COLORS[x.fn]||"var(--accent)";
+      var ageCls=x.age>=10?"age hot":"age";
+      var el=document.createElement("div");
+      el.className="prob"+(isRouted?" routed":"");
+      var opts=x.suggest.map(function(o){return '<option value="'+o+'">'+o+'</option>';}).join("");
+      var actions = isRouted
+        ? '<span class="routed-note">✓ Routed to '+routed[rk]+' — loop owner assigned</span>'
+        : '<select id="sel-'+rk+'">'+opts+'</select><button class="assignbtn" data-rk="'+rk+'">Assign owner →</button>';
+      el.innerHTML=
+        '<div class="ri-top" style="align-items:flex-start">'+
+          '<span class="p-title">'+x.t+'</span>'+
+          '<span class="'+ageCls+'">'+x.age+'d open</span>'+
+        '</div>'+
+        '<div class="p-sub"><span class="fn-dot" style="background:'+col+'"></span><b>'+x.fn+'</b> · '+x.sub+'</div>'+
+        '<div class="p-actions">'+actions+'</div>';
+      host.appendChild(el);
+    });
+    $("probCount").textContent = openCount+" still unowned";
+    if(!n) host.innerHTML='<div class="empty">No unowned problems match this filter. 🎉</div>';
+    // wire assign buttons
+    host.querySelectorAll(".assignbtn").forEach(function(b){
+      b.addEventListener("click", function(){
+        var rk=b.getAttribute("data-rk");
+        var sel=$("sel-"+rk);
+        routed[rk]=sel.value;
+        renderProblems();
+      });
+    });
+  }
+
+  function renderAll(){
+    $("weekLabel").textContent = week==="this"
+      ? "Week of Mon — live view · click any tile, decision, or problem"
+      : "Prior week · archived for trend comparison";
+    renderMetrics(); renderDecisions(); renderProblems();
+  }
+
+  // ---- wire controls ----
+  $("fnChips").querySelectorAll(".chip").forEach(function(c){
+    c.addEventListener("click", function(){
+      $("fnChips").querySelectorAll(".chip").forEach(function(x){x.classList.remove("active");});
+      c.classList.add("active");
+      fnFilter=c.getAttribute("data-fn");
+      renderAll();
+    });
+  });
+  $("weekSeg").querySelectorAll("button").forEach(function(b){
+    b.addEventListener("click", function(){
+      $("weekSeg").querySelectorAll("button").forEach(function(x){x.classList.remove("active");});
+      b.classList.add("active");
+      week=b.getAttribute("data-week");
+      renderAll();
+    });
+  });
+  $("search").addEventListener("input", function(){
+    query=this.value.trim().toLowerCase();
+    renderDecisions(); renderProblems();
+  });
+
+  renderAll();
+})();
+</script>
+</body>
+</html>
