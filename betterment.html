@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Withdrawal Review Queue — a prototype for Betterment User Trust</title>
+<style>
+  :root{
+    color-scheme: light dark;
+    --bg:#f4f6f5;
+    --panel:#ffffff;
+    --panel-2:#f8faf9;
+    --ink:#0f1e1c;
+    --ink-soft:#4a5a57;
+    --ink-faint:#7c8b88;
+    --line:#e2e8e6;
+    --line-strong:#cdd8d5;
+    --brand:#0b5f5b;       /* Betterment-esque deep teal */
+    --brand-ink:#083f3c;
+    --accent:#12b886;
+    --hi:#eafaf3;
+    --amber:#b7791f;
+    --amber-bg:#fff6e6;
+    --red:#c0392b;
+    --red-bg:#fdecea;
+    --green:#1a7a4c;
+    --green-bg:#e7f7ee;
+    --shadow:0 1px 2px rgba(9,30,28,.05), 0 8px 30px rgba(9,30,28,.06);
+    --radius:14px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0b1413;
+      --panel:#111d1b;
+      --panel-2:#0d1817;
+      --ink:#eaf2f0;
+      --ink-soft:#a9bcb8;
+      --ink-faint:#7c908c;
+      --line:#1e2e2c;
+      --line-strong:#2a3d3a;
+      --brand:#31c0a3;
+      --brand-ink:#8be6d3;
+      --accent:#31c0a3;
+      --hi:#0f2a24;
+      --amber:#e0a44a;
+      --amber-bg:#2a2213;
+      --red:#f08a7e;
+      --red-bg:#2c1613;
+      --green:#5fd699;
+      --green-bg:#0f2a1d;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 40px rgba(0,0,0,.5);
+    }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 20px 60px}
+  header.top{display:flex;flex-wrap:wrap;align-items:flex-start;gap:16px;justify-content:space-between;margin-bottom:6px}
+  .brandline{display:flex;align-items:center;gap:11px}
+  .logo{width:34px;height:34px;border-radius:9px;background:var(--brand);display:grid;place-items:center;color:#fff;font-weight:800;font-size:18px;flex:none}
+  @media (prefers-color-scheme: dark){.logo{color:#04110f}}
+  h1{font-size:19px;margin:0;letter-spacing:-.01em}
+  .sub{color:var(--ink-soft);font-size:13px;margin-top:2px}
+  .role-chip{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--brand);background:var(--hi);border:1px solid var(--line-strong);padding:5px 10px;border-radius:999px;white-space:nowrap}
+
+  .illus{font-size:12px;color:var(--ink-faint);background:var(--panel-2);border:1px dashed var(--line-strong);border-radius:10px;padding:9px 13px;margin:16px 0 20px;display:flex;gap:8px;align-items:flex-start}
+  .illus b{color:var(--ink-soft)}
+
+  /* KPI strip */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow)}
+  .kpi .n{font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1}
+  .kpi .l{font-size:11.5px;color:var(--ink-soft);margin-top:6px;text-transform:uppercase;letter-spacing:.03em}
+  .kpi .n small{font-size:14px;font-weight:600;color:var(--ink-faint)}
+
+  .board{display:grid;grid-template-columns:minmax(300px,380px) 1fr;gap:18px;align-items:start}
+
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+  .panel-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line)}
+  .panel-head h2{font-size:13px;margin:0;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft)}
+  .count-pill{font-size:12px;font-weight:700;color:var(--brand);background:var(--hi);padding:3px 9px;border-radius:999px}
+
+  .filters{display:flex;gap:6px;padding:10px 12px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .filter{font-size:12px;font-weight:600;color:var(--ink-soft);background:transparent;border:1px solid var(--line-strong);padding:5px 10px;border-radius:999px;cursor:pointer;transition:.12s}
+  .filter:hover{border-color:var(--brand);color:var(--brand)}
+  .filter.on{background:var(--brand);border-color:var(--brand);color:#fff}
+  @media (prefers-color-scheme: dark){.filter.on{color:#04110f}}
+
+  /* Queue list */
+  .queue{list-style:none;margin:0;padding:6px;max-height:560px;overflow:auto}
+  .qitem{border:1px solid transparent;border-radius:11px;padding:11px 12px;cursor:pointer;display:flex;gap:11px;align-items:center;transition:.12s}
+  .qitem:hover{background:var(--panel-2)}
+  .qitem.active{background:var(--hi);border-color:var(--line-strong)}
+  .qitem.resolved{opacity:.5}
+  .dot{width:9px;height:9px;border-radius:50%;flex:none}
+  .dot.high{background:var(--red)}
+  .dot.med{background:var(--amber)}
+  .dot.low{background:var(--green)}
+  .qmeta{flex:1;min-width:0}
+  .qmeta .top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+  .qmeta .amt{font-weight:700;font-size:14px}
+  .qmeta .who{font-size:12px;color:var(--ink-faint)}
+  .qmeta .rule{font-size:12px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+  .qscore{font-size:11px;font-weight:800;padding:2px 7px;border-radius:6px;flex:none}
+  .qscore.high{color:var(--red);background:var(--red-bg)}
+  .qscore.med{color:var(--amber);background:var(--amber-bg)}
+  .qscore.low{color:var(--green);background:var(--green-bg)}
+  .check{color:var(--green);font-weight:800;flex:none}
+
+  /* Detail */
+  .detail{padding:18px 20px 20px}
+  .empty{padding:70px 24px;text-align:center;color:var(--ink-faint)}
+  .empty .big{font-size:15px;color:var(--ink-soft);margin-bottom:4px}
+
+  .d-head{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:flex-start;border-bottom:1px solid var(--line);padding-bottom:16px;margin-bottom:16px}
+  .d-amt{font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1}
+  .d-dest{font-size:13px;color:var(--ink-soft);margin-top:5px}
+  .d-cust{text-align:right}
+  .d-cust .name{font-weight:700;font-size:14px}
+  .d-cust .id{font-size:12px;color:var(--ink-faint);font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+
+  .riskbar{margin:2px 0 18px}
+  .riskbar .lab{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft);margin-bottom:6px}
+  .riskbar .lab b{color:var(--ink)}
+  .track{height:9px;border-radius:999px;background:linear-gradient(90deg,var(--green) 0%,var(--amber) 55%,var(--red) 100%);position:relative;opacity:.9}
+  .track .mark{position:absolute;top:50%;width:16px;height:16px;border-radius:50%;background:var(--panel);border:3px solid var(--ink);transform:translate(-50%,-50%);box-shadow:0 1px 4px rgba(0,0,0,.25);transition:left .4s cubic-bezier(.2,.8,.2,1)}
+
+  .why{margin-bottom:18px}
+  .why h3{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin:0 0 10px}
+  .signals{display:grid;gap:9px}
+  .sig{display:flex;gap:11px;align-items:flex-start;background:var(--panel-2);border:1px solid var(--line);border-left:3px solid var(--brand);border-radius:9px;padding:11px 13px}
+  .sig .ic{font-size:15px;flex:none;line-height:1.4}
+  .sig .t{font-size:13px}
+  .sig .t b{display:block;margin-bottom:1px}
+  .sig .t span{color:var(--ink-soft)}
+  .sig.rule{border-left-color:var(--red)}
+  .sig.hist{border-left-color:var(--amber)}
+  .sig.pat{border-left-color:var(--brand)}
+
+  .rec{background:var(--hi);border:1px solid var(--line-strong);border-radius:11px;padding:13px 15px;margin-bottom:16px;font-size:13px}
+  .rec b{color:var(--brand-ink)}
+  @media (prefers-color-scheme:dark){.rec b{color:var(--brand-ink)}}
+
+  .actions h3{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin:0 0 10px}
+  .act-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .act{text-align:left;border:1px solid var(--line-strong);background:var(--panel);border-radius:11px;padding:12px 13px;cursor:pointer;transition:.12s;font:inherit;color:var(--ink)}
+  .act:hover{border-color:var(--brand);transform:translateY(-1px);box-shadow:var(--shadow)}
+  .act.suggested{border-color:var(--brand);box-shadow:0 0 0 1px var(--brand) inset}
+  .act .an{font-weight:700;font-size:13.5px;display:flex;align-items:center;gap:7px}
+  .act .ad{font-size:12px;color:var(--ink-soft);margin-top:3px}
+  .act .tag{font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--brand);margin-left:auto}
+
+  .resolved-banner{display:flex;align-items:center;gap:12px;background:var(--green-bg);border:1px solid var(--green);border-radius:11px;padding:14px 16px;color:var(--green)}
+  .resolved-banner .rb-ic{font-size:20px}
+  .resolved-banner .rb-t b{color:var(--green);display:block}
+  .resolved-banner .rb-t span{font-size:12.5px;color:var(--ink-soft)}
+  .undo{margin-left:auto;font-size:12px;font-weight:700;color:var(--brand);background:none;border:1px solid var(--line-strong);padding:6px 12px;border-radius:8px;cursor:pointer}
+  .undo:hover{border-color:var(--brand)}
+
+  /* Training signal log */
+  .log-panel{margin-top:18px}
+  .log{list-style:none;margin:0;padding:6px;max-height:220px;overflow:auto;font-size:13px}
+  .log li{display:flex;gap:10px;align-items:baseline;padding:8px 10px;border-radius:8px}
+  .log li:nth-child(odd){background:var(--panel-2)}
+  .log .lt{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:var(--ink-faint);flex:none}
+  .log .lx{flex:1}
+  .log .lx b{color:var(--ink)}
+  .log .badge{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;padding:2px 7px;border-radius:6px;color:var(--brand);background:var(--hi);flex:none}
+  .log-empty{padding:22px;text-align:center;color:var(--ink-faint);font-size:13px}
+
+  footer{margin-top:30px;padding-top:18px;border-top:1px solid var(--line);font-size:12.5px;color:var(--ink-faint);display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:space-between;align-items:center}
+  footer a{color:var(--brand);text-decoration:none;font-weight:600}
+  .proof{font-size:12px;color:var(--ink-faint)}
+
+  @media (max-width:860px){
+    .board{grid-template-columns:1fr}
+    .kpis{grid-template-columns:1fr 1fr}
+    .queue{max-height:340px}
+    .act-grid{grid-template-columns:1fr}
+    .d-cust{text-align:left}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brandline">
+      <div class="logo">b</div>
+      <div>
+        <h1>Withdrawal Review Queue</h1>
+        <div class="sub">Where a flagged withdrawal lands on the CX / Ops screen — see <b>why</b> it fired, resolve in one click, and every decision teaches the model.</div>
+      </div>
+    </div>
+    <span class="role-chip">Prototype · PM, User Trust</span>
+  </header>
+
+  <div class="illus">
+    <span>ⓘ</span>
+    <div><b>Illustrative prototype.</b> Customers, amounts, and risk scores below are synthetic sample data built to demonstrate the interaction — not real Betterment accounts or figures. The design pattern (reason-first review + capture-every-decision) is the point.</div>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><div class="n" id="k-open">0</div><div class="l">In queue</div></div>
+    <div class="kpi"><div class="n" id="k-done">0</div><div class="l">Resolved this session</div></div>
+    <div class="kpi"><div class="n" id="k-time">—</div><div class="l">Median time to decision</div></div>
+    <div class="kpi"><div class="n" id="k-signals">0</div><div class="l">Training signals captured</div></div>
+  </div>
+
+  <div class="board">
+    <!-- LEFT: queue -->
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Flagged withdrawals</h2>
+        <span class="count-pill" id="queue-count">0 open</span>
+      </div>
+      <div class="filters" id="filters">
+        <button class="filter on" data-f="all">All</button>
+        <button class="filter" data-f="high">High</button>
+        <button class="filter" data-f="med">Medium</button>
+        <button class="filter" data-f="low">Low</button>
+        <button class="filter" data-f="resolved">Resolved</button>
+      </div>
+      <ul class="queue" id="queue"></ul>
+    </section>
+
+    <!-- RIGHT: detail -->
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Case detail</h2>
+        <span class="count-pill" id="case-id">—</span>
+      </div>
+      <div id="detail" class="detail">
+        <div class="empty">
+          <div class="big">Select a flagged withdrawal</div>
+          <div>The review opens with the reason it fired — never a bare alert.</div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Training signal log -->
+  <section class="panel log-panel">
+    <div class="panel-head">
+      <h2>Training-signal log &nbsp;·&nbsp; every resolution becomes a labeled example</h2>
+      <span class="count-pill" id="log-count">0 captured</span>
+    </div>
+    <ul class="log" id="log"><li class="log-empty">Resolve a case and it lands here as a labeled signal the risk model can learn from.</li></ul>
+  </section>
+
+  <footer>
+    <div>Made by Shrutika Rajput — <a href="https://shrutikarajput.com" target="_blank" rel="noopener">shrutikarajput.com</a></div>
+    <div class="proof">Design lineage: HITL reasoning surface (Swaayata / Innovation Hacks) · exception-review queue that cut manual errors 25% (RSMS).</div>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---- Sample data (SYNTHETIC / ILLUSTRATIVE) ----
+  var CASES = [
+    {
+      id:"WD-4821", name:"Customer #A-4821", cid:"acct_9f3c…21", amount:24500, dest:"→ new external bank (linked 40 min ago)",
+      score:87, band:"high",
+      why:[
+        {k:"rule", ic:"⚑", t:"Rule: large withdrawal to a same-day-linked account", s:"$24,500 (91st percentile for this customer) routed to a bank account added 40 minutes ago."},
+        {k:"hist", ic:"◷", t:"Account history: quiet, then active", s:"3 years, no prior external transfers. Password + phone number both changed in the last 6 days."},
+        {k:"pat", ic:"◉", t:"Pattern: matches account-takeover shape", s:"Login from a new device + credential change + first-ever large cash-out is the classic ATO sequence."}
+      ],
+      rec:"full", recTxt:"Recommend a <b>full identity re-check</b> before release. The size, the fresh destination, and the credential changes stack — this is where an irreversible transfer needs the strongest control."
+    },
+    {
+      id:"WD-4822", name:"Customer #A-4822", cid:"acct_1b7a…04", amount:6200, dest:"→ existing linked checking (2 yrs)",
+      score:52, band:"med",
+      why:[
+        {k:"rule", ic:"⚑", t:"Rule: velocity — 3rd withdrawal in 48h", s:"Three withdrawals totaling $6,200 in two days, above this customer's usual cadence."},
+        {k:"hist", ic:"◷", t:"Account history: consistent, trusted", s:"6 years, dozens of transfers, all to this same checking account. No credential changes."},
+        {k:"pat", ic:"◉", t:"Pattern: life-event, not fraud", s:"Bursts like this correlate with home purchases / tuition — high velocity, but same known destination."}
+      ],
+      rec:"soft", recTxt:"Recommend a <b>soft confirm</b> only. The destination is trusted and the profile is clean — a full hold here would freeze a good customer's money and cost trust for little safety gain."
+    },
+    {
+      id:"WD-4823", name:"Customer #A-4823", cid:"acct_77de…18", amount:41800, dest:"→ new external bank (linked 3 days ago)",
+      score:71, band:"high",
+      why:[
+        {k:"rule", ic:"⚑", t:"Rule: high-value to recently-linked account", s:"$41,800 to a bank linked 3 days ago — over the review threshold for new destinations."},
+        {k:"hist", ic:"◷", t:"Account history: mostly clean", s:"4 years, steady contributions. One prior large withdrawal 8 months ago (verified, legitimate)."},
+        {k:"pat", ic:"◉", t:"Pattern: partial match", s:"New destination raises it, but device, location, and login pattern are all consistent with the customer."}
+      ],
+      rec:"hold", recTxt:"Recommend a <b>reversible hold + context</b>: pause 24h, tell the customer why, offer a one-tap verify. Enough friction to stop a fraud, little enough to not punish a legitimate move."
+    },
+    {
+      id:"WD-4824", name:"Customer #A-4824", cid:"acct_2c90…55", amount:1800, dest:"→ existing linked checking (4 yrs)",
+      score:23, band:"low",
+      why:[
+        {k:"rule", ic:"⚑", t:"Rule: keyword flag on transfer memo", s:"Memo field contained a term on the manual-review watchlist ('urgent')."},
+        {k:"hist", ic:"◷", t:"Account history: long, stable", s:"5 years, routine withdrawals to the same account, no anomalies of any kind."},
+        {k:"pat", ic:"◉", t:"Pattern: no risk signal", s:"Amount, destination, device, and timing are all normal. The keyword alone drove the flag."}
+      ],
+      rec:"approve", recTxt:"Recommend <b>approve & release</b>. This flag is a false positive from an over-broad keyword rule — resolving it teaches the model to stop firing on the memo term alone."
+    },
+    {
+      id:"WD-4825", name:"Customer #A-4825", cid:"acct_5aa1…83", amount:15000, dest:"→ new external bank (linked 1 day ago)",
+      score:64, band:"med",
+      why:[
+        {k:"rule", ic:"⚑", t:"Rule: large withdrawal to new account", s:"$15,000 to an account linked yesterday."},
+        {k:"hist", ic:"◷", t:"Account history: newer customer", s:"11 months old. Verified identity at signup; no red flags since, but a shorter track record."},
+        {k:"pat", ic:"◉", t:"Pattern: ambiguous", s:"New account + newer customer raises it; consistent device and a calm login history lower it."}
+      ],
+      rec:"hold", recTxt:"Recommend a <b>reversible hold + context</b>. Not enough history to fully trust the new destination, not enough signal to demand a re-check — a short, explained hold is the calibrated middle."
+    }
+  ];
+
+  var actionDefs = {
+    approve:{label:"Approve & release", desc:"No control added — clears the flag.", cls:"green"},
+    soft:{label:"Soft confirm", desc:"One-tap 'yes, it's me' in-app.", cls:"green"},
+    hold:{label:"Reversible hold + context", desc:"24h pause, customer told why.", cls:"amber"},
+    full:{label:"Full identity re-check", desc:"Re-verify before any release.", cls:"red"}
+  };
+  var actionOrder = ["approve","soft","hold","full"];
+
+  var state = {}; // id -> {resolved, action, secs}
+  var activeId = null;
+  var currentFilter = "all";
+  var resolveTimes = [];
+
+  var $ = function(s){return document.querySelector(s)};
+  var openTs = null;
+
+  function bandLabel(b){return b==="high"?"High":b==="med"?"Medium":"Low";}
+  function money(n){return "$"+n.toLocaleString("en-US");}
+
+  // ---- Queue rendering ----
+  function renderQueue(){
+    var ul = $("#queue");
+    ul.innerHTML="";
+    var visible = CASES.filter(function(c){
+      var st = state[c.id];
+      if(currentFilter==="resolved") return st && st.resolved;
+      if(st && st.resolved) return false;
+      if(currentFilter==="all") return true;
+      return c.band===currentFilter;
+    });
+    if(!visible.length){
+      var li=document.createElement("li");
+      li.className="log-empty";
+      li.style.padding="26px";li.style.textAlign="center";li.style.color="var(--ink-faint)";
+      li.textContent = currentFilter==="resolved" ? "Nothing resolved yet." : "No cases match this filter.";
+      ul.appendChild(li);
+    }
+    visible.forEach(function(c){
+      var st = state[c.id]||{};
+      var li=document.createElement("li");
+      li.className="qitem"+(c.id===activeId?" active":"")+(st.resolved?" resolved":"");
+      li.setAttribute("role","button");li.tabIndex=0;
+      li.innerHTML =
+        '<span class="dot '+c.band+'"></span>'+
+        '<div class="qmeta">'+
+          '<div class="top"><span class="amt">'+money(c.amount)+'</span>'+
+            (st.resolved?'<span class="check">✓</span>':'<span class="qscore '+c.band+'">'+c.score+'</span>')+'</div>'+
+          '<div class="rule">'+c.why[0].t.replace("Rule: ","")+'</div>'+
+          '<div class="who">'+c.id+' · '+c.dest.replace("→ ","")+'</div>'+
+        '</div>';
+      li.addEventListener("click",function(){select(c.id)});
+      li.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();select(c.id)}});
+      ul.appendChild(li);
+    });
+    var open = CASES.filter(function(c){return !(state[c.id]&&state[c.id].resolved)}).length;
+    $("#queue-count").textContent = open+" open";
+  }
+
+  // ---- Detail rendering ----
+  function select(id){
+    activeId=id;
+    openTs = perfNow();
+    renderQueue();
+    renderDetail();
+  }
+
+  function perfNow(){ try{ return (window.performance && performance.now)?performance.now():0; }catch(e){ return 0; } }
+
+  function renderDetail(){
+    var c = CASES.filter(function(x){return x.id===activeId})[0];
+    var d = $("#detail");
+    $("#case-id").textContent = c?c.id:"—";
+    if(!c) return;
+    var st = state[c.id];
+
+    var signalsHtml = c.why.map(function(w){
+      return '<div class="sig '+w.k+'"><span class="ic">'+w.ic+'</span><div class="t"><b>'+w.t+'</b><span>'+w.s+'</span></div></div>';
+    }).join("");
+
+    var scorePct = Math.max(4,Math.min(96,c.score));
+
+    var body =
+      '<div class="d-head">'+
+        '<div><div class="d-amt">'+money(c.amount)+'</div><div class="d-dest">'+c.dest+'</div></div>'+
+        '<div class="d-cust"><div class="name">'+c.name+'</div><div class="id">'+c.cid+'</div></div>'+
+      '</div>'+
+      '<div class="riskbar">'+
+        '<div class="lab"><span>Composite risk score</span><span><b>'+c.score+'/100</b> · '+bandLabel(c.band)+'</span></div>'+
+        '<div class="track"><span class="mark" style="left:'+scorePct+'%"></span></div>'+
+      '</div>'+
+      '<div class="why"><h3>Why this fired</h3><div class="signals">'+signalsHtml+'</div></div>'+
+      '<div class="rec">'+c.recTxt+'</div>';
+
+    if(st && st.resolved){
+      var a = actionDefs[st.action];
+      body +=
+        '<div class="resolved-banner">'+
+          '<span class="rb-ic">✓</span>'+
+          '<div class="rb-t"><b>Resolved · '+a.label+'</b><span>Captured as a training signal'+(st.secs!=null?' · decided in '+st.secs+'s':'')+'.</span></div>'+
+          '<button class="undo" id="undo-btn">Undo</button>'+
+        '</div>';
+    } else {
+      var actsHtml = actionOrder.map(function(k){
+        var a=actionDefs[k];
+        var suggested = (k===c.rec);
+        return '<button class="act'+(suggested?' suggested':'')+'" data-action="'+k+'">'+
+          '<div class="an">'+a.label+(suggested?'<span class="tag">Suggested</span>':'')+'</div>'+
+          '<div class="ad">'+a.desc+'</div></button>';
+      }).join("");
+      body += '<div class="actions"><h3>Resolve — one click</h3><div class="act-grid">'+actsHtml+'</div></div>';
+    }
+
+    d.innerHTML = body;
+
+    if(st && st.resolved){
+      $("#undo-btn").addEventListener("click",function(){undo(c.id)});
+    } else {
+      d.querySelectorAll(".act").forEach(function(btn){
+        btn.addEventListener("click",function(){resolve(c.id, btn.getAttribute("data-action"))});
+      });
+    }
+  }
+
+  // ---- Resolve / undo ----
+  function resolve(id, action){
+    var secs = null;
+    if(openTs!=null){ secs = Math.max(1, Math.round((perfNow()-openTs)/1000)); resolveTimes.push(secs); }
+    state[id] = {resolved:true, action:action, secs:secs};
+    var c = CASES.filter(function(x){return x.id===id})[0];
+    addLog(c, action);
+    renderKpis();
+    renderQueue();
+    renderDetail();
+  }
+
+  function undo(id){
+    var c = CASES.filter(function(x){return x.id===id})[0];
+    // remove last matching log entry
+    var idx = logEntries.map(function(e){return e.cid}).lastIndexOf(id);
+    if(idx>-1) logEntries.splice(idx,1);
+    if(state[id] && state[id].secs!=null){
+      var t = resolveTimes.lastIndexOf(state[id].secs);
+      if(t>-1) resolveTimes.splice(t,1);
+    }
+    delete state[id];
+    renderLog();
+    renderKpis();
+    renderQueue();
+    renderDetail();
+  }
+
+  // ---- Training signal log ----
+  var logEntries = [];
+  var logSeq = 1;
+  function pad(n){return n<10?"0"+n:""+n;}
+  function stamp(){
+    // synthetic incrementing timestamp so we don't call Date() (deterministic)
+    var base = 9*3600 + 14*60; // 09:14:00 baseline
+    var t = base + logSeq*37;
+    var h = Math.floor(t/3600)%24, m=Math.floor(t/60)%60, s=t%60;
+    return pad(h)+":"+pad(m)+":"+pad(s);
+  }
+  function addLog(c, action){
+    var a=actionDefs[action];
+    var label = (action==="approve"||action==="soft") ? "not-fraud" : (action==="full"?"escalated":"held");
+    logEntries.push({cid:c.id, ts:stamp(), text:c.id+" ("+money(c.amount)+") → <b>"+a.label+"</b>", badge:label});
+    logSeq++;
+    renderLog();
+  }
+  function renderLog(){
+    var ul=$("#log");
+    if(!logEntries.length){
+      ul.innerHTML='<li class="log-empty">Resolve a case and it lands here as a labeled signal the risk model can learn from.</li>';
+    } else {
+      ul.innerHTML="";
+      logEntries.slice().reverse().forEach(function(e){
+        var li=document.createElement("li");
+        li.innerHTML='<span class="lt">'+e.ts+'</span><span class="lx">'+e.text+'</span><span class="badge">'+e.badge+'</span>';
+        ul.appendChild(li);
+      });
+    }
+    $("#log-count").textContent = logEntries.length+" captured";
+  }
+
+  // ---- KPIs ----
+  function renderKpis(){
+    var open = CASES.filter(function(c){return !(state[c.id]&&state[c.id].resolved)}).length;
+    var done = CASES.length-open;
+    $("#k-open").textContent = open;
+    $("#k-done").textContent = done;
+    $("#k-signals").textContent = logEntries.length;
+    if(resolveTimes.length){
+      var sorted = resolveTimes.slice().sort(function(a,b){return a-b});
+      var mid = sorted[Math.floor((sorted.length-1)/2)];
+      $("#k-time").innerHTML = mid+'<small>s</small>';
+    } else {
+      $("#k-time").textContent = "—";
+    }
+  }
+
+  // ---- Filters ----
+  $("#filters").addEventListener("click",function(e){
+    var b=e.target.closest(".filter"); if(!b) return;
+    currentFilter=b.getAttribute("data-f");
+    $("#filters").querySelectorAll(".filter").forEach(function(f){f.classList.toggle("on",f===b)});
+    renderQueue();
+  });
+
+  // ---- Init ----
+  renderKpis();
+  renderQueue();
+  renderLog();
+})();
+</script>
+</body>
+</html>
