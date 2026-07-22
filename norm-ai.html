@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Sign-off Surface — a HITL redesign for Norm Ai</title>
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --panel: #ffffff;
+    --panel-2: #fbfbfd;
+    --ink: #14161c;
+    --ink-2: #4a5160;
+    --ink-3: #838b9b;
+    --line: #e4e7ec;
+    --line-2: #eef0f4;
+    --accent: #2f5bea;
+    --accent-soft: #eaf0ff;
+    --green: #1a9d63;
+    --green-soft: #e5f6ee;
+    --amber: #c98a12;
+    --amber-soft: #fcf3e0;
+    --red: #d1493f;
+    --red-soft: #fbe9e7;
+    --shadow: 0 1px 2px rgba(20,22,28,.04), 0 8px 28px rgba(20,22,28,.06);
+    --radius: 14px;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+  }
+  [data-theme="dark"] {
+    --bg: #0c0e13;
+    --panel: #14171f;
+    --panel-2: #171b24;
+    --ink: #eef1f6;
+    --ink-2: #b3bac8;
+    --ink-3: #737c8e;
+    --line: #262b36;
+    --line-2: #1e222c;
+    --accent: #6f92ff;
+    --accent-soft: #1a2238;
+    --green: #45c98a;
+    --green-soft: #12261e;
+    --amber: #e0a944;
+    --amber-soft: #2a2110;
+    --red: #ec6a5f;
+    --red-soft: #2c1613;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 34px rgba(0,0,0,.4);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    font-size: 15px;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 22px 22px 60px; }
+
+  /* Header */
+  header.top {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 20px; flex-wrap: wrap; margin-bottom: 22px;
+  }
+  .brand { display: flex; flex-direction: column; gap: 6px; }
+  .eyebrow {
+    font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--accent); font-weight: 700;
+  }
+  h1 { font-size: 25px; margin: 0; letter-spacing: -.02em; font-weight: 700; }
+  .sub { color: var(--ink-2); font-size: 14px; max-width: 640px; margin-top: 2px; }
+  .sub b { color: var(--ink); font-weight: 600; }
+
+  .theme-btn {
+    border: 1px solid var(--line); background: var(--panel); color: var(--ink-2);
+    border-radius: 999px; padding: 8px 14px; font-size: 13px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 7px; font-weight: 600;
+    transition: .15s; white-space: nowrap;
+  }
+  .theme-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Metric strip */
+  .metrics {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px;
+  }
+  .metric {
+    background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 14px 16px; box-shadow: var(--shadow);
+  }
+  .metric .k { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); font-weight: 700; }
+  .metric .v { font-size: 24px; font-weight: 700; letter-spacing: -.02em; margin-top: 3px; font-variant-numeric: tabular-nums; }
+  .metric .d { font-size: 12px; color: var(--ink-2); margin-top: 1px; }
+  .metric .v.tick { transition: color .2s; }
+
+  /* Main grid */
+  .console {
+    display: grid; grid-template-columns: 320px 1fr; gap: 16px; align-items: start;
+  }
+
+  /* Queue */
+  .queue { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+  .queue-head {
+    padding: 13px 16px; border-bottom: 1px solid var(--line-2);
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 12px; font-weight: 700; color: var(--ink-3); letter-spacing: .06em; text-transform: uppercase;
+  }
+  .queue-count { background: var(--accent-soft); color: var(--accent); border-radius: 999px; padding: 2px 9px; font-size: 12px; }
+  .qlist { max-height: 560px; overflow-y: auto; }
+  .qitem {
+    padding: 13px 16px; border-bottom: 1px solid var(--line-2); cursor: pointer;
+    display: flex; gap: 11px; transition: background .12s; position: relative;
+  }
+  .qitem:hover { background: var(--panel-2); }
+  .qitem.active { background: var(--accent-soft); }
+  .qitem.active::before { content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background: var(--accent); }
+  .qitem.done { opacity: .5; }
+  .sev-dot { width: 9px; height: 9px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+  .sev-high { background: var(--red); }
+  .sev-med  { background: var(--amber); }
+  .sev-low  { background: var(--green); }
+  .qmeta { min-width: 0; flex: 1; }
+  .qtitle { font-size: 13.5px; font-weight: 600; color: var(--ink); }
+  .qsub { font-size: 12px; color: var(--ink-3); margin-top: 2px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .rule-chip { font-family: var(--mono); font-size: 11px; background: var(--line-2); color: var(--ink-2); border-radius: 5px; padding: 1px 6px; }
+  .done-badge { font-size: 10.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+
+  /* Detail card */
+  .detail { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+  .empty { padding: 60px 30px; text-align: center; color: var(--ink-3); }
+
+  .d-head { padding: 18px 22px 16px; border-bottom: 1px solid var(--line-2); }
+  .d-top { display: flex; justify-content: space-between; gap: 14px; align-items: flex-start; flex-wrap: wrap; }
+  .d-title { font-size: 18px; font-weight: 700; letter-spacing: -.01em; }
+  .d-context { font-size: 13px; color: var(--ink-2); margin-top: 3px; }
+  .sev-tag { font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+  .sev-tag.sev-high { background: var(--red-soft); color: var(--red); }
+  .sev-tag.sev-med  { background: var(--amber-soft); color: var(--amber); }
+  .sev-tag.sev-low  { background: var(--green-soft); color: var(--green); }
+
+  .d-body { padding: 20px 22px; display: grid; gap: 20px; }
+
+  .block-label {
+    font-size: 11px; letter-spacing: .09em; text-transform: uppercase; font-weight: 700;
+    color: var(--ink-3); margin-bottom: 8px; display: flex; align-items: center; gap: 7px;
+  }
+  .block-label .num {
+    width: 18px; height: 18px; border-radius: 50%; background: var(--ink); color: var(--panel);
+    font-size: 11px; display: inline-flex; align-items: center; justify-content: center; font-weight: 700;
+  }
+
+  /* The flagged content */
+  .flagged {
+    background: var(--panel-2); border: 1px solid var(--line); border-left: 3px solid var(--amber);
+    border-radius: 10px; padding: 14px 16px; font-size: 14.5px; color: var(--ink);
+  }
+  .flagged .agent-line { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ink-3); margin-bottom: 8px; }
+  .agent-pill { background: var(--accent-soft); color: var(--accent); border-radius: 6px; padding: 2px 8px; font-weight: 700; font-size: 11px; }
+  .hl { background: var(--amber-soft); border-bottom: 2px solid var(--amber); padding: 0 2px; border-radius: 2px; cursor: help; }
+
+  /* Confidence — the key redesign moment */
+  .conf-wrap { display: grid; grid-template-columns: 1fr; gap: 12px; }
+  .conf-bar-outer {
+    position: relative; height: 40px; background: linear-gradient(90deg, var(--green-soft), var(--amber-soft) 55%, var(--red-soft));
+    border-radius: 10px; border: 1px solid var(--line); overflow: hidden;
+  }
+  .conf-band {
+    position: absolute; top: 0; bottom: 0; background: rgba(47,91,234,.10);
+    border-left: 2px dashed var(--accent); border-right: 2px dashed var(--accent);
+  }
+  [data-theme="dark"] .conf-band { background: rgba(111,146,255,.16); }
+  .conf-marker {
+    position: absolute; top: -4px; bottom: -4px; width: 3px; background: var(--ink);
+    transition: left .5s cubic-bezier(.2,.7,.2,1);
+  }
+  .conf-marker::after {
+    content: attr(data-val); position: absolute; top: -22px; left: 50%; transform: translateX(-50%);
+    background: var(--ink); color: var(--panel); font-size: 11px; font-weight: 700; padding: 1px 6px;
+    border-radius: 5px; white-space: nowrap; font-variant-numeric: tabular-nums;
+  }
+  .conf-scale { display: flex; justify-content: space-between; font-size: 11px; color: var(--ink-3); margin-top: 6px; }
+  .conf-note { font-size: 12.5px; color: var(--ink-2); margin-top: 10px; display: flex; gap: 8px; align-items: flex-start; }
+  .conf-note b { color: var(--ink); }
+  .calib-tag {
+    font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px;
+    background: var(--accent-soft); color: var(--accent); white-space: nowrap;
+  }
+
+  /* Reasoning / citations */
+  .reason-toggle {
+    width: 100%; text-align: left; background: var(--panel-2); border: 1px solid var(--line);
+    border-radius: 10px; padding: 12px 15px; cursor: pointer; color: var(--ink);
+    font-size: 13.5px; font-weight: 600; display: flex; justify-content: space-between; align-items: center;
+    transition: .12s;
+  }
+  .reason-toggle:hover { border-color: var(--accent); }
+  .reason-toggle .chev { transition: transform .2s; color: var(--ink-3); }
+  .reason-toggle[aria-expanded="true"] .chev { transform: rotate(90deg); }
+  .reason-panel {
+    display: none; margin-top: 10px; border: 1px solid var(--line-2); border-radius: 10px; overflow: hidden;
+  }
+  .reason-panel.open { display: block; }
+  .step { padding: 12px 15px; border-bottom: 1px solid var(--line-2); font-size: 13.5px; }
+  .step:last-child { border-bottom: none; }
+  .step .s-head { font-weight: 600; color: var(--ink); display: flex; gap: 8px; align-items: center; }
+  .step .s-body { color: var(--ink-2); margin-top: 3px; }
+  .cite { font-family: var(--mono); font-size: 12px; color: var(--accent); background: var(--accent-soft); border-radius: 5px; padding: 1px 6px; }
+  .step-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+
+  /* Decision zone */
+  .decide { border-top: 1px solid var(--line-2); padding: 18px 22px 20px; background: var(--panel-2); }
+  .decide-q { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .decide-hint { font-size: 12.5px; color: var(--ink-3); margin-bottom: 14px; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn {
+    border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+    border-radius: 10px; padding: 11px 16px; font-size: 14px; font-weight: 600; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 9px; transition: .13s; flex: 1; justify-content: center; min-width: 150px;
+  }
+  .btn:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
+  .btn .kbd {
+    font-family: var(--mono); font-size: 11px; border: 1px solid currentColor; opacity: .6;
+    border-radius: 4px; padding: 0 5px; line-height: 15px;
+  }
+  .btn-approve { border-color: var(--green); color: var(--green); }
+  .btn-approve:hover { background: var(--green); color: #fff; }
+  .btn-edit { border-color: var(--accent); color: var(--accent); }
+  .btn-edit:hover { background: var(--accent); color: #fff; }
+  .btn-reject { border-color: var(--red); color: var(--red); }
+  .btn-reject:hover { background: var(--red); color: #fff; }
+
+  .resolved-note {
+    margin-top: 14px; font-size: 13px; padding: 12px 15px; border-radius: 10px;
+    display: none; align-items: flex-start; gap: 10px;
+  }
+  .resolved-note.show { display: flex; }
+  .resolved-note.approve { background: var(--green-soft); color: var(--green); }
+  .resolved-note.edit { background: var(--accent-soft); color: var(--accent); }
+  .resolved-note.reject { background: var(--red-soft); color: var(--red); }
+  .resolved-note b { color: var(--ink); }
+  .resolved-note .signal { color: var(--ink-2); font-weight: 500; }
+
+  /* Signal log */
+  .signal-log { margin-top: 16px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+  .sl-head { padding: 13px 16px; border-bottom: 1px solid var(--line-2); font-size: 12px; font-weight: 700; color: var(--ink-3); letter-spacing: .06em; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
+  .sl-body { padding: 6px 0; max-height: 220px; overflow-y: auto; }
+  .sl-empty { padding: 22px 16px; color: var(--ink-3); font-size: 13px; text-align: center; }
+  .sl-row { padding: 9px 16px; border-bottom: 1px solid var(--line-2); font-size: 13px; display: flex; gap: 10px; align-items: baseline; }
+  .sl-row:last-child { border-bottom: none; }
+  .sl-time { font-family: var(--mono); font-size: 11px; color: var(--ink-3); white-space: nowrap; }
+  .sl-verb { font-weight: 700; }
+  .sl-verb.approve { color: var(--green); }
+  .sl-verb.edit { color: var(--accent); }
+  .sl-verb.reject { color: var(--red); }
+  .sl-what { color: var(--ink-2); }
+
+  /* Teardown callouts */
+  .principles { margin-top: 22px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .principle { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 17px; box-shadow: var(--shadow); }
+  .principle .p-n { font-family: var(--mono); font-size: 12px; color: var(--accent); font-weight: 700; }
+  .principle .p-t { font-size: 15px; font-weight: 700; margin: 6px 0 5px; letter-spacing: -.01em; }
+  .principle .p-b { font-size: 13px; color: var(--ink-2); }
+  .principle .p-proof { font-size: 12px; color: var(--ink-3); margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--line-2); }
+  .principle .p-proof b { color: var(--ink-2); }
+
+  footer {
+    margin-top: 30px; text-align: center; font-size: 13px; color: var(--ink-3);
+    border-top: 1px solid var(--line); padding-top: 18px;
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+  .illus {
+    display: inline-block; margin-top: 8px; font-size: 11.5px; color: var(--ink-3);
+    background: var(--panel-2); border: 1px dashed var(--line); border-radius: 8px; padding: 6px 12px;
+  }
+
+  @media (max-width: 860px) {
+    .metrics { grid-template-columns: repeat(2, 1fr); }
+    .console { grid-template-columns: 1fr; }
+    .qlist { max-height: 300px; }
+    .principles { grid-template-columns: 1fr; }
+    .btn { flex: 1 1 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand">
+      <span class="eyebrow">Sign-off Surface · HITL redesign for Norm Ai</span>
+      <h1>Where an attorney signs off on the agent</h1>
+      <p class="sub">Norm's core product moment: Supervisory AI flags a compliance agent's work, and a human attorney must decide, <b>fast</b>, whether to approve. This is a working prototype of that surface — built around three questions: <b>what do they need to see, how is confidence shown, and how does the decision become a signal.</b></p>
+    </div>
+    <button class="theme-btn" id="themeBtn" aria-label="Toggle theme">
+      <span id="themeIcon">🌙</span><span id="themeLabel">Dark</span>
+    </button>
+  </header>
+
+  <div class="metrics">
+    <div class="metric">
+      <div class="k">Queue depth</div>
+      <div class="v tick" id="mQueue">6</div>
+      <div class="d">awaiting human sign-off</div>
+    </div>
+    <div class="metric">
+      <div class="k">Signed off</div>
+      <div class="v tick" id="mDone">0</div>
+      <div class="d">this session</div>
+    </div>
+    <div class="metric">
+      <div class="k">Median time to decision</div>
+      <div class="v tick" id="mTime">—</div>
+      <div class="d">from open to sign-off</div>
+    </div>
+    <div class="metric">
+      <div class="k">Training signals</div>
+      <div class="v tick" id="mSignals">0</div>
+      <div class="d">every decision captured</div>
+    </div>
+  </div>
+
+  <div class="console">
+    <!-- QUEUE -->
+    <div class="queue">
+      <div class="queue-head">
+        <span>Review queue</span>
+        <span class="queue-count" id="qCount">6 open</span>
+      </div>
+      <div class="qlist" id="qlist"></div>
+    </div>
+
+    <!-- DETAIL -->
+    <div class="detail" id="detail">
+      <div class="empty" id="emptyState">
+        Select a flagged item from the queue to open the sign-off surface.
+      </div>
+    </div>
+  </div>
+
+  <!-- SIGNAL LOG -->
+  <div class="signal-log">
+    <div class="sl-head">
+      <span>Decision → training signal log</span>
+      <span id="slCount">0 captured</span>
+    </div>
+    <div class="sl-body" id="slBody">
+      <div class="sl-empty">No signals yet. Every approve / edit / reject you make is captured here as a labeled example the compliance agent learns from.</div>
+    </div>
+  </div>
+
+  <!-- PRINCIPLES / TEARDOWN -->
+  <div class="principles">
+    <div class="principle">
+      <div class="p-n">01 · SEE</div>
+      <div class="p-t">The rule that fired, in one glance</div>
+      <div class="p-b">The flagged phrase is highlighted in place, tied to the exact rule and its citation — no hunting across tabs. The reviewer reads the risk before reading the reasoning.</div>
+      <div class="p-proof"><b>Proof:</b> RSMS exception queue — a single view to monitor, investigate & resolve, −25% manual errors.</div>
+    </div>
+    <div class="principle">
+      <div class="p-n">02 · TRUST</div>
+      <div class="p-t">Confidence shown as a calibrated band</div>
+      <div class="p-b">Not a lone percentage. A calibrated band tells the attorney how much to trust the score itself — high-stakes, low-confidence items are surfaced as "read closely," not rubber-stamped.</div>
+      <div class="p-proof"><b>Proof:</b> Swaayata — every autonomous action visible, reversible, explainable; a reasoning graph, not a verdict.</div>
+    </div>
+    <div class="principle">
+      <div class="p-n">03 · SIGNAL</div>
+      <div class="p-t">The decision teaches the system</div>
+      <div class="p-b">Approve, edit, or reject — each becomes a labeled training example. Human sign-off is the deliverable, so every sign-off is also the data that makes the next agent draft better.</div>
+      <div class="p-proof"><b>Proof:</b> Innovation Hacks HITL — human input / override on AI decisions, made visible and measurable.</div>
+    </div>
+  </div>
+
+  <footer>
+    <div>Made by Shrutika Rajput — <a href="https://shrutikarajput.com" target="_blank" rel="noopener">shrutikarajput.com</a></div>
+    <div class="illus">⚠ The queue items, rules, confidence scores and citations are <b>illustrative sample data</b> built to demonstrate the interaction — not Norm Ai production data.</div>
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Theme ----------
+  var root = document.documentElement;
+  var themeBtn = document.getElementById('themeBtn');
+  var themeIcon = document.getElementById('themeIcon');
+  var themeLabel = document.getElementById('themeLabel');
+  function applyTheme(t) {
+    root.setAttribute('data-theme', t);
+    themeIcon.textContent = t === 'dark' ? '☀️' : '🌙';
+    themeLabel.textContent = t === 'dark' ? 'Light' : 'Dark';
+  }
+  // respect system preference on first load
+  var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  applyTheme(prefersDark ? 'dark' : 'light');
+  themeBtn.addEventListener('click', function () {
+    applyTheme(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  });
+
+  // ---------- Illustrative sample data ----------
+  // A compliance agent drafts / reviews regulated material; Supervisory AI flags it;
+  // an attorney signs off. Confidence bands are illustrative calibration ranges.
+  var ITEMS = [
+    {
+      id: 'MK-4471', sev: 'high',
+      title: 'Marketing email: "guaranteed 8% annual returns"',
+      context: 'Agent-reviewed retail investor email · flagged before send',
+      agent: 'Marketing Compliance Agent',
+      body: 'Open a Growth account today and lock in a <span class="hl" title="Flagged phrase">guaranteed 8% annual return</span> — no market risk, backed by our track record.',
+      rule: 'FINRA 2210(d)(1)',
+      ruleName: 'Communications with the public — no misleading / guarantee claims',
+      conf: 34, band: [22, 46],
+      calib: 'Well-calibrated · low',
+      confNote: 'Low confidence and high stakes. The model is unsure whether "guaranteed" is a fixed-term product feature or a prohibited performance promise — this is exactly the case to read closely, not rubber-stamp.',
+      reasoning: [
+        { h: 'Matched language', b: '"guaranteed…return" + "no market risk" pattern', c: 'FINRA 2210(d)(1)(B)' },
+        { h: 'Account context', b: 'Growth is a market-exposed product; no guaranteed-return feature exists in the product sheet.', c: 'PRD §Growth' },
+        { h: 'Precedent', b: '3 prior emails with "guaranteed" edited by counsel in last 90d.', c: 'signal-log' }
+      ]
+    },
+    {
+      id: 'DK-2210', sev: 'med',
+      title: 'Client disclosure: fee schedule omission',
+      context: 'Agent-generated Form ADV cover note · pre-delivery',
+      agent: 'Disclosure Drafting Agent',
+      body: 'Our advisory fee is 0.85% of assets under management, billed quarterly. <span class="hl" title="Flagged: missing third-party cost disclosure">Additional costs may apply.</span>',
+      rule: 'SEC ADV Part 2A · Item 5',
+      ruleName: 'Fees & compensation — all material costs disclosed',
+      conf: 71, band: [60, 80],
+      calib: 'Well-calibrated · medium',
+      confNote: '"Additional costs may apply" is vague where Item 5 expects itemized third-party costs (custodian, fund expenses). Medium confidence — likely a real gap, but wording may be completed downstream.',
+      reasoning: [
+        { h: 'Rule expectation', b: 'Item 5 requires description of other costs a client bears (custody, fund fees).', c: 'ADV 2A Item 5' },
+        { h: 'Gap detected', b: 'Vague catch-all instead of enumerated costs.', c: 'draft §fees' },
+        { h: 'Severity', b: 'Omission, not misstatement — editable, not a block.', c: 'policy-map' }
+      ]
+    },
+    {
+      id: 'AD-9083', sev: 'low',
+      title: 'Social post: performance chart, dated footnote',
+      context: 'Agent-reviewed LinkedIn post · scheduled',
+      agent: 'Marketing Compliance Agent',
+      body: 'Q2 performance across our model portfolios. <span class="hl" title="Flagged: footnote date">Past performance shown as of 2025.</span> See disclosures.',
+      rule: 'FINRA 2210(d)(1)',
+      ruleName: 'Fair & balanced — current, dated performance',
+      conf: 88, band: [80, 94],
+      calib: 'Well-calibrated · high',
+      confNote: 'High confidence, low stakes. The footnote is present and the disclosure links out; the only issue is a stale "as of" date. A quick approve-or-edit, not a deep read.',
+      reasoning: [
+        { h: 'Disclosure present', b: 'Past-performance + link to full disclosures both found.', c: 'post §footer' },
+        { h: 'Minor issue', b: 'Date reads 2025; current period is Q2.', c: 'calendar' },
+        { h: 'Recommendation', b: 'Edit date, then send. No material risk.', c: 'policy-map' }
+      ]
+    },
+    {
+      id: 'PO-1567', sev: 'high',
+      title: 'Policy answer: "insider trading is fine if verbal"',
+      context: 'Internal M365 agent answering an employee policy question',
+      agent: 'Internal Policy Agent (dogfood)',
+      body: 'Q: "Can I share deal info verbally with a friend?" A: <span class="hl" title="Flagged: incorrect and dangerous answer">That should be fine as long as nothing is in writing.</span>',
+      rule: 'Firm Code of Conduct · MNPI',
+      ruleName: 'Material non-public information — no selective disclosure',
+      conf: 41, band: [28, 55],
+      calib: 'Well-calibrated · low',
+      confNote: 'Low confidence, severe consequence. The agent produced a dangerous, incorrect answer. This is the case that must reach a human before it reaches an employee — a wrong sign-off here is a real harm.',
+      reasoning: [
+        { h: 'Contradiction', b: 'Answer contradicts MNPI policy — medium is irrelevant to a disclosure violation.', c: 'Code §MNPI' },
+        { h: 'Confidence low', b: 'Model flagged its own answer as uncertain against source policy.', c: 'self-score' },
+        { h: 'Action', b: 'Reject; correction becomes a high-value training signal.', c: 'signal-log' }
+      ]
+    },
+    {
+      id: 'DK-3390', sev: 'med',
+      title: 'Client letter: risk language softened',
+      context: 'Agent-drafted quarterly client letter · pre-send',
+      agent: 'Disclosure Drafting Agent',
+      body: 'Markets were volatile this quarter, but <span class="hl" title="Flagged: minimizes risk">there is little reason for concern going forward.</span>',
+      rule: 'SEC Marketing Rule 206(4)-1',
+      ruleName: 'No untrue / unbalanced statements of material fact',
+      conf: 63, band: [50, 74],
+      calib: 'Well-calibrated · medium',
+      confNote: 'Forward-looking reassurance ("little reason for concern") risks reading as an unbalanced prediction. Medium confidence — tone judgment a human calibrates better than the model.',
+      reasoning: [
+        { h: 'Pattern', b: 'Forward reassurance without balancing risk language.', c: 'Rule 206(4)-1' },
+        { h: 'Nuance', b: 'Not false, but unbalanced — a tone / judgment call.', c: 'draft §outlook' },
+        { h: 'Best path', b: 'Edit toward balanced language; keep the letter.', c: 'policy-map' }
+      ]
+    },
+    {
+      id: 'AD-7742', sev: 'low',
+      title: 'Ad copy: testimonial without disclosure',
+      context: 'Agent-reviewed display ad · pre-publish',
+      agent: 'Marketing Compliance Agent',
+      body: '"Best decision I ever made." — a real client. <span class="hl" title="Flagged: testimonial disclosure">Individual results.</span>',
+      rule: 'SEC Marketing Rule 206(4)-1',
+      ruleName: 'Testimonials — required disclosures',
+      conf: 82, band: [73, 90],
+      calib: 'Well-calibrated · high',
+      confNote: 'High confidence. A testimonial appears with a partial disclosure; the rule wants compensation status + material-conflict language. Straightforward edit-and-approve.',
+      reasoning: [
+        { h: 'Testimonial detected', b: 'Client quote triggers Marketing Rule disclosure set.', c: 'Rule 206(4)-1' },
+        { h: 'Partial disclosure', b: '"Individual results" present; comp/conflict line missing.', c: 'ad §legal' },
+        { h: 'Action', b: 'Add standard disclosure block, approve.', c: 'template' }
+      ]
+    }
+  ];
+
+  // ---------- State ----------
+  var state = {}; // id -> { decision, seconds }
+  var openId = null;
+  var openStart = null; // ms timestamp when item opened (relative)
+  var clock = 0;        // synthetic monotonic clock (avoids Date.now, still relative timing)
+  var timerHandle = null;
+  var signals = [];     // {time, verb, id, note}
+
+  // relative monotonic clock via performance.now if available, else counter
+  function nowMs() {
+    return (window.performance && performance.now) ? performance.now() : (clock += 1000);
+  }
+
+  // ---------- Rendering ----------
+  var qlist = document.getElementById('qlist');
+  var detail = document.getElementById('detail');
+
+  function sevClass(s) { return s === 'high' ? 'sev-high' : s === 'med' ? 'sev-med' : 'sev-low'; }
+  function sevWord(s) { return s === 'high' ? 'High risk' : s === 'med' ? 'Medium' : 'Low risk'; }
+
+  function renderQueue() {
+    qlist.innerHTML = '';
+    ITEMS.forEach(function (it) {
+      var done = state[it.id];
+      var el = document.createElement('div');
+      el.className = 'qitem' + (openId === it.id ? ' active' : '') + (done ? ' done' : '');
+      el.setAttribute('role', 'button');
+      el.setAttribute('tabindex', '0');
+      var badge = done
+        ? '<span class="done-badge" style="color:var(--' + (done.decision === 'approve' ? 'green' : done.decision === 'reject' ? 'red' : 'accent') + ')">✓ ' + done.decision + '</span>'
+        : '<span class="rule-chip">' + it.rule + '</span>';
+      el.innerHTML =
+        '<span class="sev-dot ' + sevClass(it.sev) + '"></span>' +
+        '<div class="qmeta">' +
+          '<div class="qtitle">' + it.title + '</div>' +
+          '<div class="qsub">' + it.id + ' · ' + badge + '</div>' +
+        '</div>';
+      el.addEventListener('click', function () { openItem(it.id); });
+      el.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openItem(it.id); }
+      });
+      qlist.appendChild(el);
+    });
+  }
+
+  function openItem(id) {
+    openId = id;
+    openStart = nowMs();
+    var it = find(id);
+    renderQueue();
+    renderDetail(it);
+  }
+
+  function find(id) { for (var i = 0; i < ITEMS.length; i++) if (ITEMS[i].id === id) return ITEMS[i]; return null; }
+
+  function renderDetail(it) {
+    var done = state[it.id];
+    var reasoningRows = it.reasoning.map(function (r) {
+      return '<div class="step"><div class="s-head"><span class="step-dot"></span>' + r.h +
+             '</div><div class="s-body">' + r.b + ' <span class="cite">' + r.c + '</span></div></div>';
+    }).join('');
+
+    // confidence marker position + band
+    var markLeft = it.conf;
+    var bandL = it.band[0], bandR = it.band[1];
+
+    detail.innerHTML =
+      '<div class="d-head">' +
+        '<div class="d-top">' +
+          '<div><div class="d-title">' + it.title + '</div>' +
+          '<div class="d-context">' + it.context + '</div></div>' +
+          '<span class="sev-tag ' + sevClass(it.sev) + '">' + sevWord(it.sev) + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="d-body">' +
+
+        // 1. WHAT FIRED
+        '<div>' +
+          '<div class="block-label"><span class="num">1</span> What the agent produced · why it fired</div>' +
+          '<div class="flagged">' +
+            '<div class="agent-line"><span class="agent-pill">' + it.agent + '</span> output · Supervisory AI flagged the highlighted span</div>' +
+            it.body +
+            '<div style="margin-top:12px;font-size:12.5px;color:var(--ink-2)"><b style="color:var(--ink)">Rule:</b> <span class="cite">' + it.rule + '</span> — ' + it.ruleName + '</div>' +
+          '</div>' +
+        '</div>' +
+
+        // 2. CONFIDENCE
+        '<div>' +
+          '<div class="block-label"><span class="num">2</span> How confident — and how calibrated <span class="calib-tag">' + it.calib + '</span></div>' +
+          '<div class="conf-wrap">' +
+            '<div class="conf-bar-outer">' +
+              '<div class="conf-band" style="left:' + bandL + '%;width:' + (bandR - bandL) + '%"></div>' +
+              '<div class="conf-marker" data-val="' + it.conf + '% confident" style="left:' + markLeft + '%"></div>' +
+            '</div>' +
+            '<div class="conf-scale"><span>0 · flag it</span><span>50</span><span>100 · looks compliant</span></div>' +
+            '<div class="conf-note"><span>ℹ️</span><span><b>Read the band, not just the number.</b> ' + it.confNote + '</span></div>' +
+          '</div>' +
+        '</div>' +
+
+        // 3. REASONING
+        '<div>' +
+          '<div class="block-label"><span class="num">3</span> The reasoning behind the flag</div>' +
+          '<button class="reason-toggle" id="reasonBtn" aria-expanded="false">' +
+            '<span>Show reasoning trace &amp; citations (' + it.reasoning.length + ' steps)</span>' +
+            '<span class="chev">▶</span>' +
+          '</button>' +
+          '<div class="reason-panel" id="reasonPanel">' + reasoningRows + '</div>' +
+        '</div>' +
+
+      '</div>' +
+
+      // DECISION ZONE
+      '<div class="decide">' +
+        '<div class="decide-q">Your sign-off — human judgment is the deliverable.</div>' +
+        '<div class="decide-hint">Keyboard: <b>A</b> approve · <b>E</b> edit &amp; approve · <b>R</b> reject. Every choice is captured as a training signal.</div>' +
+        '<div class="actions">' +
+          '<button class="btn btn-approve" data-dec="approve"><span>✓ Approve as compliant</span><span class="kbd">A</span></button>' +
+          '<button class="btn btn-edit" data-dec="edit"><span>✎ Edit &amp; approve</span><span class="kbd">E</span></button>' +
+          '<button class="btn btn-reject" data-dec="reject"><span>✕ Reject &amp; return</span><span class="kbd">R</span></button>' +
+        '</div>' +
+        '<div class="resolved-note" id="resolvedNote"></div>' +
+      '</div>';
+
+    // wire reasoning toggle
+    var rb = document.getElementById('reasonBtn');
+    var rp = document.getElementById('reasonPanel');
+    rb.addEventListener('click', function () {
+      var openNow = rp.classList.toggle('open');
+      rb.setAttribute('aria-expanded', openNow ? 'true' : 'false');
+    });
+
+    // wire decision buttons
+    var btns = detail.querySelectorAll('.btn[data-dec]');
+    btns.forEach(function (b) {
+      b.addEventListener('click', function () { decide(it, b.getAttribute('data-dec')); });
+    });
+
+    // if already resolved, show state
+    if (done) showResolved(it, done.decision, done.seconds, true);
+  }
+
+  var DEC_LABEL = { approve: 'Approved', edit: 'Edited & approved', reject: 'Rejected & returned' };
+  var DEC_SIGNAL = {
+    approve: 'Labeled as a positive example — agent output confirmed compliant.',
+    edit: 'Diff captured — the human correction becomes a supervised training pair.',
+    reject: 'Labeled as a violation — high-value negative example added to the eval set.'
+  };
+
+  function decide(it, dec) {
+    var already = state[it.id];
+    var secs;
+    if (already) {
+      secs = already.seconds; // keep original timing
+    } else {
+      secs = Math.max(1, Math.round((nowMs() - openStart) / 1000));
+    }
+    state[it.id] = { decision: dec, seconds: secs };
+
+    if (!already) {
+      signals.push({ verb: dec, id: it.id, title: it.title, t: signals.length });
+    } else {
+      // update the existing signal's verb
+      for (var i = signals.length - 1; i >= 0; i--) {
+        if (signals[i].id === it.id) { signals[i].verb = dec; break; }
+      }
+    }
+
+    showResolved(it, dec, secs, false);
+    renderQueue();
+    updateMetrics();
+    renderSignals();
+  }
+
+  function showResolved(it, dec, secs, silent) {
+    var note = document.getElementById('resolvedNote');
+    if (!note) return;
+    note.className = 'resolved-note show ' + dec;
+    note.innerHTML = '<span>' + (dec === 'approve' ? '✓' : dec === 'edit' ? '✎' : '✕') + '</span>' +
+      '<span><b>' + DEC_LABEL[dec] + '</b> in ' + secs + 's. ' +
+      '<span class="signal">→ ' + DEC_SIGNAL[dec] + '</span></span>';
+  }
+
+  // ---------- Metrics ----------
+  function updateMetrics() {
+    var doneIds = Object.keys(state);
+    var doneCount = doneIds.length;
+    var openCount = ITEMS.length - doneCount;
+    document.getElementById('mQueue').textContent = openCount;
+    document.getElementById('mDone').textContent = doneCount;
+    document.getElementById('qCount').textContent = openCount + ' open';
+    document.getElementById('slCount').textContent = doneCount + ' captured';
+    document.getElementById('mSignals').textContent = doneCount;
+
+    // median time
+    var times = doneIds.map(function (id) { return state[id].seconds; }).sort(function (a, b) { return a - b; });
+    if (times.length) {
+      var mid = Math.floor(times.length / 2);
+      var med = times.length % 2 ? times[mid] : Math.round((times[mid - 1] + times[mid]) / 2);
+      document.getElementById('mTime').textContent = med + 's';
+    } else {
+      document.getElementById('mTime').textContent = '—';
+    }
+
+    // brief tick highlight
+    ['mQueue', 'mDone', 'mSignals'].forEach(function (id) {
+      var el = document.getElementById(id);
+      el.style.color = 'var(--accent)';
+      setTimeout(function () { el.style.color = ''; }, 260);
+    });
+  }
+
+  // ---------- Signal log ----------
+  var slBody = document.getElementById('slBody');
+  function renderSignals() {
+    if (!signals.length) {
+      slBody.innerHTML = '<div class="sl-empty">No signals yet. Every approve / edit / reject you make is captured here as a labeled example the compliance agent learns from.</div>';
+      return;
+    }
+    slBody.innerHTML = signals.slice().reverse().map(function (s, idx) {
+      var n = signals.length - idx; // stable-ish index label
+      var verbTxt = s.verb === 'approve' ? 'APPROVE' : s.verb === 'edit' ? 'EDIT' : 'REJECT';
+      return '<div class="sl-row">' +
+        '<span class="sl-time">#' + String(n).padStart(3, '0') + '</span>' +
+        '<span class="sl-verb ' + s.verb + '">' + verbTxt + '</span>' +
+        '<span class="sl-what">' + s.id + ' — ' + s.title + '</span>' +
+      '</div>';
+    }).join('');
+  }
+
+  // ---------- Keyboard shortcuts ----------
+  document.addEventListener('keydown', function (e) {
+    if (!openId) return;
+    var it = find(openId);
+    if (!it) return;
+    var k = e.key.toLowerCase();
+    if (k === 'a') { decide(it, 'approve'); }
+    else if (k === 'e') { decide(it, 'edit'); }
+    else if (k === 'r') { decide(it, 'reject'); }
+  });
+
+  // ---------- Init ----------
+  renderQueue();
+  updateMetrics();
+  renderSignals();
+  openItem(ITEMS[0].id); // open the first (highest-stakes) item by default
+})();
+</script>
+</body>
+</html>
