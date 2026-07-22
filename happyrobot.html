@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cost per Resolved Freight Workflow — Agents vs Humans</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --panel:#ffffff; --ink:#111827; --muted:#5b6472;
+    --line:#e5e8ee; --accent:#2f6df6; --accent-soft:#e7f0ff;
+    --agent:#2f6df6; --human:#e0782a; --good:#158a5a; --warn:#c23b3b;
+    --shadow:0 1px 2px rgba(16,24,40,.06),0 8px 24px rgba(16,24,40,.06);
+    --radius:14px;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#0e1116; --panel:#161b23; --ink:#e8ecf2; --muted:#9aa4b2;
+      --line:#252c37; --accent:#5b8cff; --accent-soft:#17233d;
+      --agent:#5b8cff; --human:#e5934d; --good:#3fbe86; --warn:#f0716f;
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.35);
+    }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased; padding:28px 18px 60px;
+  }
+  .wrap{max-width:1040px;margin:0 auto}
+  header.top{margin-bottom:22px}
+  .eyebrow{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+  h1{font-size:clamp(22px,3.4vw,30px);line-height:1.15;margin:6px 0 8px;font-weight:700;letter-spacing:-.02em}
+  .sub{color:var(--muted);max-width:70ch;margin:0}
+  .grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:18px;margin-top:22px}
+  @media (max-width:820px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+  .card .pad{padding:20px}
+  .card h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 16px;font-weight:600}
+
+  /* workflow tabs */
+  .tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+  .tab{border:1px solid var(--line);background:transparent;color:var(--muted);padding:8px 12px;border-radius:999px;
+    font-size:13px;font-weight:600;cursor:pointer;transition:.15s}
+  .tab:hover{border-color:var(--accent)}
+  .tab.active{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+
+  .ctrl{margin:0 0 18px}
+  .ctrl:last-child{margin-bottom:0}
+  .ctrl .row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:6px}
+  .ctrl label{font-weight:600;font-size:14px}
+  .ctrl .val{font-variant-numeric:tabular-nums;font-weight:700;font-size:15px}
+  .ctrl .hint{color:var(--muted);font-size:12px;margin:4px 0 0}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:999px;
+    background:var(--line);outline:none;margin:4px 0}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:20px;height:20px;border-radius:50%;
+    background:var(--accent);border:3px solid var(--panel);box-shadow:0 1px 4px rgba(0,0,0,.25);cursor:pointer}
+  input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--accent);
+    border:3px solid var(--panel);box-shadow:0 1px 4px rgba(0,0,0,.25);cursor:pointer}
+  .seed{display:inline-block;font-size:11px;font-weight:600;color:var(--accent);background:var(--accent-soft);
+    border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:middle}
+
+  /* results */
+  .kpis{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}
+  .kpi{border:1px solid var(--line);border-radius:12px;padding:14px}
+  .kpi .lab{font-size:12px;color:var(--muted);font-weight:600}
+  .kpi .num{font-size:clamp(20px,3vw,26px);font-weight:750;letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin-top:4px}
+  .kpi.big{grid-column:1 / -1;background:linear-gradient(180deg,var(--accent-soft),transparent)}
+  .kpi.big .num{color:var(--good)}
+  .num.warn{color:var(--warn)!important}
+
+  .bar-wrap{margin:6px 0 4px}
+  .barlabels{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:5px}
+  .bar{height:26px;border-radius:8px;background:var(--line);display:flex;overflow:hidden;font-size:11px;font-weight:700;color:#fff}
+  .bar span{display:flex;align-items:center;justify-content:center;white-space:nowrap;transition:width .25s ease}
+  .seg-agent{background:var(--agent)}
+  .seg-esc{background:var(--human)}
+  .legend{display:flex;gap:16px;font-size:12px;color:var(--muted);margin-top:8px;flex-wrap:wrap}
+  .dot{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:middle}
+
+  /* crossover */
+  .cross{margin-top:20px;border-top:1px solid var(--line);padding-top:16px}
+  .cross h3{font-size:13px;margin:0 0 4px;font-weight:700}
+  .cross p{color:var(--muted);font-size:13px;margin:0 0 12px}
+  .track{position:relative;height:44px;border-radius:10px;
+    background:linear-gradient(90deg,var(--accent-soft),transparent 60%);border:1px solid var(--line);overflow:hidden}
+  .track .fill{position:absolute;top:0;bottom:0;left:0;background:rgba(47,109,246,.10)}
+  .cx-line{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--warn)}
+  .cx-flag{position:absolute;top:-22px;transform:translateX(-50%);font-size:11px;font-weight:700;color:var(--warn);white-space:nowrap}
+  .cx-now{position:absolute;top:0;bottom:0;width:3px;background:var(--ink);border-radius:2px}
+  .cx-scale{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:6px}
+  .verdict{margin-top:12px;font-size:13.5px;font-weight:600;padding:10px 12px;border-radius:10px;background:var(--accent-soft)}
+  .verdict.bad{background:rgba(194,59,59,.10);color:var(--warn)}
+
+  .prov{margin-top:22px;font-size:12.5px;color:var(--muted);line-height:1.6}
+  .prov b{color:var(--ink)}
+  footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);
+    font-size:12.5px;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  footer a{color:var(--accent);text-decoration:none}
+  code.k{font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow">HappyRobot · Strategic Finance &amp; Business Operations</div>
+    <h1>Cost per resolved freight workflow — agents vs humans</h1>
+    <p class="sub">The finance seat exists to turn headline automation metrics into defensible unit economics — the
+    number every renewal and the next raise gets negotiated on. Tune the model below to see blended cost per
+    resolved workflow, monthly savings, and the escalation rate where a human touch stops being cheaper.</p>
+  </header>
+
+  <div class="grid">
+    <!-- INPUTS -->
+    <section class="card"><div class="pad">
+      <h2>Model inputs</h2>
+
+      <div class="tabs" id="tabs">
+        <button class="tab active" data-w="checkcall">Carrier check-call</button>
+        <button class="tab" data-w="appt">Appointment scheduling</button>
+        <button class="tab" data-w="invoice">Invoice reconciliation</button>
+      </div>
+
+      <div class="ctrl">
+        <div class="row"><label for="vol">Monthly workflow volume</label><span class="val" id="volV"></span></div>
+        <input type="range" id="vol" min="1000" max="200000" step="1000">
+        <p class="hint" id="volHint"></p>
+      </div>
+
+      <div class="ctrl">
+        <div class="row"><label for="auto">End-to-end autonomy rate<span class="seed" id="autoSeed">K+N: 78%</span></label><span class="val" id="autoV"></span></div>
+        <input type="range" id="auto" min="30" max="98" step="1">
+        <p class="hint">Share resolved fully by the agent with no human touch. Seeded at HappyRobot's published
+          Kuehne+Nagel result: <b>78% of interactions handled end-to-end</b>.</p>
+      </div>
+
+      <div class="ctrl">
+        <div class="row"><label for="human">Fully-loaded human cost / workflow</label><span class="val" id="humanV"></span></div>
+        <input type="range" id="human" min="1" max="20" step="0.25">
+        <p class="hint">Agent (rep/ops) minutes to resolve one workflow, loaded. <em>Illustrative.</em></p>
+      </div>
+
+      <div class="ctrl">
+        <div class="row"><label for="agent">Agent cost / workflow</label><span class="val" id="agentV"></span></div>
+        <input type="range" id="agent" min="0.1" max="6" step="0.05">
+        <p class="hint">Compute + platform cost per agent-handled workflow. <em>Illustrative.</em></p>
+      </div>
+
+      <div class="ctrl">
+        <div class="row"><label for="handoff">Human cost on an escalated workflow</label><span class="val" id="handoffV"></span></div>
+        <input type="range" id="handoff" min="0.25" max="1" step="0.05">
+        <p class="hint">Escalations cost the agent attempt <b>plus</b> this fraction of a full human resolve
+          (context is pre-loaded, so usually &lt; 100%). <em>Illustrative.</em></p>
+      </div>
+    </div></section>
+
+    <!-- RESULTS -->
+    <section class="card"><div class="pad">
+      <h2>Unit economics</h2>
+
+      <div class="kpis">
+        <div class="kpi"><div class="lab">Blended cost / resolved workflow</div><div class="num" id="blended"></div></div>
+        <div class="kpi"><div class="lab">Human-only baseline</div><div class="num" id="baseline"></div></div>
+        <div class="kpi big"><div class="lab">Estimated monthly savings vs all-human</div><div class="num" id="save"></div></div>
+      </div>
+
+      <div class="bar-wrap">
+        <div class="barlabels"><span>How the volume resolves</span><span id="mixNote"></span></div>
+        <div class="bar" id="bar">
+          <span class="seg-agent" id="segA"></span>
+          <span class="seg-esc" id="segE"></span>
+        </div>
+        <div class="legend">
+          <span><span class="dot seg-agent"></span>Autonomous (agent only)</span>
+          <span><span class="dot seg-esc"></span>Human-touched (escalated)</span>
+        </div>
+      </div>
+
+      <div class="cross">
+        <h3>Escalation crossover</h3>
+        <p>Below the line, agent + escalation beats all-human. Above it, a designed human watchpoint is the
+          <em>cheaper</em> choice — not a fallback. The needle is your current autonomy setting.</p>
+        <div class="track" id="track">
+          <div class="fill" id="cxFill"></div>
+          <div class="cx-line" id="cxLine"><span class="cx-flag" id="cxFlag"></span></div>
+          <div class="cx-now" id="cxNow"></div>
+        </div>
+        <div class="cx-scale"><span>0% autonomy</span><span>100% autonomy</span></div>
+        <div class="verdict" id="verdict"></div>
+      </div>
+    </div></section>
+  </div>
+
+  <div class="prov card"><div class="pad">
+    <div class="prov">
+      <b>What's seeded vs illustrative.</b> The <b>78% end-to-end</b> autonomy default and the <b>47% capacity increase</b>
+      context are HappyRobot's own published Kuehne+Nagel figures. All dollar costs are <b>illustrative placeholders</b>
+      you can tune — the tool is the reasoning, not a claim about HappyRobot's real margins. Invoice-reconciliation
+      volume references the <b>26k/mo</b> workflow scale noted in the finance-role brief.<br><br>
+      <b>Why this shape of tool.</b> HappyRobot's headline metrics are impressive but not yet a unit-economics story;
+      finance's job is the bridge from "% automated" to "$ per resolved workflow" and to the escalation rate that
+      protects or erodes gross margin. Built by a designer who owns the financial model too — Mura carried a real
+      74–79% gross-margin model; Swaayata is where autonomy converts to measurable savings (41 min → under 5 min).
+    </div>
+  </div></div>
+
+  <footer>
+    <span>Made by Shrutika Rajput — <a href="https://shrutikarajput.com" target="_blank" rel="noopener">shrutikarajput.com</a></span>
+    <span>Dollar figures are illustrative; automation % is HappyRobot's published K+N data.</span>
+  </footer>
+</div>
+
+<script>
+(function(){
+  // Per-workflow defaults. Dollar values ILLUSTRATIVE; autonomy seeded from published K+N (78%).
+  var WF = {
+    checkcall:{ label:"Carrier check-call",       vol:60000,  human:5.50,  agent:0.85, auto:78 },
+    appt:     { label:"Appointment scheduling",   vol:34000,  human:7.25,  agent:1.10, auto:71 },
+    invoice:  { label:"Invoice reconciliation",   vol:26000,  human:9.00,  agent:1.40, auto:64 }
+  };
+  var current = "checkcall";
+  var handoffFrac = 0.6; // fraction of a full human resolve charged on an escalation
+
+  var $ = function(id){ return document.getElementById(id); };
+  var els = {
+    vol:$("vol"), auto:$("auto"), human:$("human"), agent:$("agent"), handoff:$("handoff")
+  };
+
+  function fmt$(n){
+    if(n>=1000) return "$"+Math.round(n).toLocaleString();
+    return "$"+n.toFixed(2);
+  }
+  function fmtBig(n){
+    var a=Math.abs(n);
+    if(a>=1e6) return (n<0?"-$":"$")+(a/1e6).toFixed(2)+"M";
+    if(a>=1e3) return (n<0?"-$":"$")+Math.round(a).toLocaleString();
+    return (n<0?"-$":"$")+a.toFixed(0);
+  }
+
+  function loadWorkflow(key){
+    current = key;
+    var w = WF[key];
+    els.vol.value   = w.vol;
+    els.auto.value  = w.auto;
+    els.human.value = w.human;
+    els.agent.value = w.agent;
+    els.handoff.value = handoffFrac;
+    compute();
+  }
+
+  function compute(){
+    var vol   = +els.vol.value;
+    var a     = +els.auto.value/100;      // autonomy rate
+    var e     = 1 - a;                     // escalation rate
+    var H     = +els.human.value;          // full human cost
+    var A     = +els.agent.value;          // agent cost
+    var hf    = +els.handoff.value;        // handoff fraction
+
+    // Autonomous ones cost A. Escalated ones cost A (agent attempt) + hf*H (human resolves w/ context).
+    var blended = a*A + e*(A + hf*H);      // = A + e*hf*H
+    var baseline = H;
+    var savePer = baseline - blended;
+    var monthly = savePer * vol;
+
+    // Crossover autonomy: blended == baseline  =>  A + (1-a)*hf*H = H
+    //   => a* = 1 - (H - A)/(hf*H)
+    var aStar = 1 - (H - A)/(hf*H);
+    aStar = Math.max(0, Math.min(1, aStar));
+
+    // ---- write readouts ----
+    $("volV").textContent = Math.round(vol).toLocaleString()+" / mo";
+    $("volHint").textContent = WF[current].label+" workflows resolved per month.";
+    $("autoV").textContent = Math.round(a*100)+"%";
+    $("humanV").textContent = fmt$(H);
+    $("agentV").textContent = fmt$(A);
+    $("handoffV").textContent = Math.round(hf*100)+"% of a human resolve";
+
+    $("blended").textContent = fmt$(blended);
+    $("baseline").textContent = fmt$(baseline);
+
+    var saveEl = $("save");
+    saveEl.textContent = (monthly>=0?"":"") + fmtBig(monthly) + " / mo";
+    saveEl.classList.toggle("warn", monthly < 0);
+
+    // mix bar
+    var pa = Math.round(a*100), pe = 100-pa;
+    var segA=$("segA"), segE=$("segE");
+    segA.style.width = pa+"%"; segE.style.width = pe+"%";
+    segA.textContent = pa>=8 ? pa+"%" : "";
+    segE.textContent = pe>=8 ? pe+"%" : "";
+    $("mixNote").textContent = Math.round(a*vol).toLocaleString()+" auto · "+Math.round(e*vol).toLocaleString()+" escalated";
+
+    // crossover track
+    $("cxFill").style.width = (aStar*100)+"%";
+    $("cxLine").style.left = (aStar*100)+"%";
+    $("cxFlag").textContent = "break-even "+Math.round(aStar*100)+"%";
+    $("cxNow").style.left = (a*100)+"%";
+
+    var v = $("verdict");
+    if(a >= aStar){
+      var head = Math.round((a-aStar)*100);
+      v.className = "verdict";
+      v.innerHTML = "At <b>"+Math.round(a*100)+"%</b> autonomy you're <b>"+head+
+        " pts above break-even</b> ("+Math.round(aStar*100)+"%). Agents win — every point of autonomy is "+
+        fmt$(hf*H)+" saved per escalation avoided.";
+    } else {
+      var gap = Math.round((aStar-a)*100);
+      v.className = "verdict bad";
+      v.innerHTML = "At <b>"+Math.round(a*100)+"%</b> autonomy you're <b>"+gap+
+        " pts below break-even</b> ("+Math.round(aStar*100)+"%). Here the human path is cheaper — the finance "+
+        "signal to hold the workflow or drive autonomy up before pricing on it.";
+    }
+  }
+
+  // wire tabs
+  var tabs = document.querySelectorAll(".tab");
+  tabs.forEach(function(t){
+    t.addEventListener("click", function(){
+      tabs.forEach(function(x){x.classList.remove("active");});
+      t.classList.add("active");
+      loadWorkflow(t.getAttribute("data-w"));
+    });
+  });
+  // wire sliders
+  Object.keys(els).forEach(function(k){ els[k].addEventListener("input", compute); });
+
+  loadWorkflow("checkcall");
+})();
+</script>
+</body>
+</html>
