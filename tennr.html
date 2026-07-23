@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tennr · Path to Yes — prior-auth gap workspace · Shrutika Rajput</title>
+<style>
+/* ============================================================
+   Path to Yes — a prior-authorization gap-closing workspace
+   Grounded in Tennr's real product: RaeLM extraction, payer-policy
+   qualification, Communications Coordination, tunable Autopilot.
+   Self-contained. No external requests. Light/dark theme-aware.
+   ============================================================ */
+:root{
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+
+  --bg:#eef1f7; --surface:#ffffff; --surface-2:#f5f7fc; --surface-3:#e9eef7;
+  --border:#dce2ee; --border-strong:#c6cfe0;
+  --ink:#101a2e; --muted:#586277; --faint:#8993a8;
+
+  --brand:#2f57ea; --brand-ink:#1f42c9; --brand-wash:#e9effe;
+  --met:#0f9250; --met-wash:#e5f5ec; --met-line:#bfe6cd;
+  --warn:#b6791a; --warn-wash:#fbf1dc; --warn-line:#efdcae;
+  --gap:#d33f4c; --gap-wash:#fce7ea; --gap-line:#f3c7cd;
+
+  --shadow-sm:0 1px 2px rgba(16,26,46,.05);
+  --shadow:0 1px 2px rgba(16,26,46,.05),0 14px 34px -20px rgba(16,26,46,.30);
+  --shadow-lg:0 1px 2px rgba(16,26,46,.06),0 30px 60px -28px rgba(16,26,46,.42);
+  --radius:14px; --radius-lg:20px;
+}
+@media (prefers-color-scheme:dark){:root[data-theme="auto"]{
+  --bg:#070a11; --surface:#0e1421; --surface-2:#131b2b; --surface-3:#192237;
+  --border:#222d45; --border-strong:#2f3c5a;
+  --ink:#e9edf7; --muted:#9aa6bf; --faint:#697490;
+  --brand:#6180ff; --brand-ink:#93a8ff; --brand-wash:#15203e;
+  --met:#37cf87; --met-wash:#0f2a20; --met-line:#1f4636;
+  --warn:#e2ac4d; --warn-wash:#2b2413; --warn-line:#48391b;
+  --gap:#f2626e; --gap-wash:#2d1519; --gap-line:#4a2228;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.4);
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 18px 40px -22px rgba(0,0,0,.75);
+  --shadow-lg:0 1px 2px rgba(0,0,0,.5),0 34px 70px -30px rgba(0,0,0,.85);
+}}
+:root[data-theme="dark"]{
+  --bg:#070a11; --surface:#0e1421; --surface-2:#131b2b; --surface-3:#192237;
+  --border:#222d45; --border-strong:#2f3c5a;
+  --ink:#e9edf7; --muted:#9aa6bf; --faint:#697490;
+  --brand:#6180ff; --brand-ink:#93a8ff; --brand-wash:#15203e;
+  --met:#37cf87; --met-wash:#0f2a20; --met-line:#1f4636;
+  --warn:#e2ac4d; --warn-wash:#2b2413; --warn-line:#48391b;
+  --gap:#f2626e; --gap-wash:#2d1519; --gap-line:#4a2228;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.4);
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 18px 40px -22px rgba(0,0,0,.75);
+  --shadow-lg:0 1px 2px rgba(0,0,0,.5),0 34px 70px -30px rgba(0,0,0,.85);
+}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:
+    radial-gradient(1200px 600px at 80% -10%, color-mix(in srgb,var(--brand) 8%, transparent), transparent 60%),
+    var(--bg);
+  color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  min-height:100vh;
+}
+.wrap{max-width:1240px;margin:0 auto;padding:0 22px 72px}
+a{color:var(--brand-ink);text-decoration:none}
+button{font-family:inherit}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.tnum{font-variant-numeric:tabular-nums}
+
+/* ---------- masthead ---------- */
+.mast{display:flex;align-items:center;gap:14px;padding:22px 0 18px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:11px}
+.logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(150deg,var(--brand),color-mix(in srgb,var(--brand) 55%,#0a1030));
+  display:grid;place-items:center;color:#fff;font-weight:800;font-size:17px;box-shadow:var(--shadow-sm);letter-spacing:-.02em}
+.brand .bt{font-weight:700;font-size:16px;letter-spacing:-.01em}
+.brand .bs{font-size:12px;color:var(--faint);margin-top:-2px}
+.grow{flex:1 1 auto}
+.tframe{display:inline-flex;border:1px solid var(--border);background:var(--surface);border-radius:999px;padding:3px;gap:2px;box-shadow:var(--shadow-sm)}
+.tframe button{border:0;background:transparent;color:var(--muted);font-size:12px;font-weight:600;padding:6px 11px;border-radius:999px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:.16s}
+.tframe button[aria-pressed="true"]{background:var(--surface-3);color:var(--ink);box-shadow:var(--shadow-sm)}
+.ghost{border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:12px;font-weight:600;padding:8px 12px;border-radius:10px;cursor:pointer;transition:.16s;box-shadow:var(--shadow-sm)}
+.ghost:hover{color:var(--ink);border-color:var(--border-strong)}
+
+/* ---------- hero framing ---------- */
+.hero{margin:6px 0 20px}
+.kick{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--brand-ink);font-weight:600}
+h1{font-size:clamp(1.7rem,3.5vw,2.35rem);line-height:1.08;letter-spacing:-.02em;margin:10px 0 0;font-weight:750;max-width:20ch}
+.lede{color:var(--muted);max-width:74ch;margin:13px 0 0;font-size:15.5px;line-height:1.62}
+.lede b{color:var(--ink);font-weight:650}
+
+/* ---------- benchmark strip ---------- */
+.bench{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:22px}
+@media(max-width:860px){.bench{grid-template-columns:repeat(2,1fr)}}
+.bc{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 15px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden}
+.bc .n{font-size:23px;font-weight:750;letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums}
+.bc .l{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.4}
+.bc .src{font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-top:9px}
+.bc.b1 .n{color:var(--met)} .bc.b2 .n{color:var(--brand-ink)} .bc.b3 .n{color:var(--warn)} .bc.b4 .n{color:var(--ink)}
+
+/* ---------- console shell ---------- */
+.console{margin-top:22px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);overflow:hidden}
+.cbar{display:flex;align-items:center;gap:12px;padding:13px 18px;border-bottom:1px solid var(--border);background:var(--surface-2);flex-wrap:wrap}
+.cbar .ct{font-weight:700;font-size:14px;display:flex;align-items:center;gap:9px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--brand);box-shadow:0 0 0 4px color-mix(in srgb,var(--brand) 18%,transparent)}
+.chip{font-family:var(--mono);font-size:11px;color:var(--muted);background:var(--surface-3);border:1px solid var(--border);padding:3px 9px;border-radius:999px;letter-spacing:.02em}
+.chip.live{color:var(--met);border-color:var(--met-line);background:var(--met-wash)}
+
+/* ---------- main split ---------- */
+.split{display:grid;grid-template-columns:290px 1fr;min-height:600px}
+@media(max-width:1080px){.split{grid-template-columns:1fr}}
+.rail{border-right:1px solid var(--border);background:var(--surface-2);display:flex;flex-direction:column}
+@media(max-width:1080px){.rail{border-right:0;border-bottom:1px solid var(--border)}}
+.railh{padding:13px 16px 9px;font-family:var(--mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--faint);display:flex;align-items:center;justify-content:space-between}
+.queue{padding:0 10px 8px;display:flex;flex-direction:column;gap:7px}
+.qcard{text-align:left;width:100%;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:11px 12px;cursor:pointer;transition:.16s;display:block}
+.qcard:hover{border-color:var(--border-strong)}
+.qcard[aria-current="true"]{border-color:var(--brand);box-shadow:0 0 0 1px var(--brand), var(--shadow-sm)}
+.qtop{display:flex;align-items:center;gap:7px;justify-content:space-between}
+.qname{font-weight:650;font-size:13.5px;letter-spacing:-.01em}
+.qvert{font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--faint)}
+.qmeta{font-size:11.5px;color:var(--muted);margin-top:3px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.qbar{margin-top:9px;height:5px;border-radius:4px;background:var(--surface-3);overflow:hidden;display:flex}
+.qbar i{height:100%}
+.mini{font-family:var(--mono);font-size:10.5px;padding:1px 6px;border-radius:6px;border:1px solid transparent}
+.mini.gap{color:var(--gap);background:var(--gap-wash);border-color:var(--gap-line)}
+.mini.ok{color:var(--met);background:var(--met-wash);border-color:var(--met-line)}
+
+/* threshold control in rail */
+.thr{margin-top:auto;padding:15px 16px;border-top:1px solid var(--border)}
+.thr h4{margin:0;font-size:12.5px;font-weight:700;display:flex;align-items:center;gap:7px}
+.thr p{margin:6px 0 0;font-size:11.5px;color:var(--muted);line-height:1.5}
+.slrow{display:flex;align-items:center;gap:10px;margin-top:12px}
+input[type=range]{-webkit-appearance:none;appearance:none;height:6px;border-radius:999px;flex:1;
+  background:linear-gradient(90deg,var(--brand) var(--fill,50%),var(--surface-3) var(--fill,50%));outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid var(--brand);box-shadow:var(--shadow-sm);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#fff;border:2px solid var(--brand);cursor:pointer}
+.tval{font-family:var(--mono);font-weight:700;color:var(--brand-ink);min-width:44px;text-align:right;font-size:13px}
+.thrread{margin-top:11px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:9px 11px;font-size:11.5px;color:var(--muted);line-height:1.5}
+.thrread b{color:var(--ink)}
+
+/* ---------- work area ---------- */
+.work{display:flex;flex-direction:column;min-width:0}
+.rhead{padding:16px 20px 14px;border-bottom:1px solid var(--border)}
+.rtop{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.rtitle{font-size:16.5px;font-weight:750;letter-spacing:-.01em;display:flex;align-items:center;gap:9px}
+.synthtag{font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--warn);background:var(--warn-wash);border:1px solid var(--warn-line);padding:2px 7px;border-radius:6px;white-space:nowrap}
+.rfacts{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:9px;font-size:12.5px;color:var(--muted)}
+.rfacts b{color:var(--ink);font-weight:600}
+.rfacts .k{color:var(--faint);font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;margin-right:5px}
+
+/* path-to-yes meter */
+.p2y{margin-top:15px;background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:14px 15px}
+.p2yhead{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.verdict{display:flex;align-items:center;gap:9px;font-weight:700;font-size:14.5px}
+.vico{width:22px;height:22px;border-radius:7px;display:grid;place-items:center;font-size:13px;color:#fff}
+.verdict.deny .vico{background:var(--gap)} .verdict.risk .vico{background:var(--warn)} .verdict.ready .vico{background:var(--met)}
+.verdict.deny{color:var(--gap)} .verdict.risk{color:var(--warn)} .verdict.ready{color:var(--met)}
+.risknum{margin-left:auto;text-align:right;line-height:1.05}
+.risknum b{font-size:22px;font-weight:750;font-variant-numeric:tabular-nums}
+.risknum span{display:block;font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--faint);font-family:var(--mono)}
+.seg{display:flex;gap:3px;margin-top:12px;height:9px}
+.seg i{flex:1;border-radius:3px;background:var(--surface-3);transition:background .4s ease}
+.seg i.met{background:var(--met)} .seg i.pending{background:var(--warn)} .seg i.gap{background:var(--gap)}
+.p2ymeta{display:flex;align-items:center;gap:14px;margin-top:10px;font-size:11.5px;color:var(--muted);flex-wrap:wrap}
+.p2ymeta .d{display:inline-flex;align-items:center;gap:5px}
+.sw{width:9px;height:9px;border-radius:3px;display:inline-block}
+.sw.met{background:var(--met)} .sw.pending{background:var(--warn)} .sw.gap{background:var(--gap)}
+
+/* criteria + drawer layout */
+.body{display:grid;grid-template-columns:1fr 372px;min-height:340px}
+@media(max-width:980px){.body{grid-template-columns:1fr}}
+.crits{padding:14px 16px 18px;border-right:1px solid var(--border)}
+@media(max-width:980px){.crits{border-right:0;border-bottom:1px solid var(--border)}}
+.crith{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin:2px 4px 11px;display:flex;justify-content:space-between}
+.crit{width:100%;text-align:left;background:var(--surface);border:1px solid var(--border);border-left-width:3px;border-radius:12px;padding:12px 13px;cursor:pointer;transition:.16s;margin-bottom:9px;display:block}
+.crit:hover{border-color:var(--border-strong)}
+.crit[aria-current="true"]{box-shadow:0 0 0 1px var(--brand),var(--shadow-sm);border-color:var(--brand)}
+.crit.met{border-left-color:var(--met)} .crit.pending{border-left-color:var(--warn)} .crit.gap{border-left-color:var(--gap)}
+.crow{display:flex;align-items:center;gap:10px}
+.st{width:20px;height:20px;border-radius:6px;flex:none;display:grid;place-items:center;font-size:12px;font-weight:800;color:#fff}
+.st.met{background:var(--met)} .st.pending{background:var(--warn)} .st.gap{background:var(--gap)}
+.clabel{font-weight:650;font-size:13.5px;letter-spacing:-.01em;flex:1;min-width:0}
+.ctag{font-family:var(--mono);font-size:10px;letter-spacing:.03em;padding:2px 7px;border-radius:6px;white-space:nowrap}
+.ctag.met{color:var(--met);background:var(--met-wash)} .ctag.pending{color:var(--warn);background:var(--warn-wash)} .ctag.gap{color:var(--gap);background:var(--gap-wash)}
+.cval{margin-top:7px;font-size:12.5px;color:var(--muted);line-height:1.5;padding-left:30px}
+.cval b{color:var(--ink);font-weight:600}
+.cflag{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;color:var(--warn);background:var(--warn-wash);border:1px solid var(--warn-line);padding:1px 6px;border-radius:6px;margin-left:6px;vertical-align:middle}
+
+/* drawer */
+.drawer{background:var(--surface-2);padding:16px 17px;min-width:0}
+.dempty{color:var(--faint);font-size:13px;text-align:center;padding:60px 20px;line-height:1.6}
+.dempty .big{font-size:26px;display:block;margin-bottom:10px;opacity:.6}
+.dkick{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
+.dtitle{font-weight:750;font-size:15px;letter-spacing:-.01em;margin:5px 0 0;display:flex;align-items:center;gap:8px}
+.dreq{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:11px 12px;margin-top:12px}
+.dreq .lab{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-bottom:5px}
+.dreq p{margin:0;font-size:12.5px;line-height:1.55;color:var(--ink)}
+.dreq p.src{color:var(--muted)}
+
+/* fax evidence */
+.fax{margin-top:12px;background:var(--surface);border:1px solid var(--border);border-radius:11px;overflow:hidden}
+.faxh{display:flex;align-items:center;gap:8px;padding:8px 11px;border-bottom:1px solid var(--border);background:var(--surface-3);font-family:var(--mono);font-size:10.5px;color:var(--muted);letter-spacing:.03em}
+.faxb{padding:12px 13px;font-family:var(--mono);font-size:11.5px;line-height:1.7;color:var(--muted);white-space:pre-wrap}
+.hl{background:color-mix(in srgb,var(--met) 22%,transparent);color:var(--ink);border-radius:4px;padding:0 3px;font-weight:600}
+.hl.miss{background:color-mix(in srgb,var(--gap) 20%,transparent)}
+.conf{display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-size:11.5px;color:var(--muted)}
+.confbar{width:70px;height:6px;border-radius:4px;background:var(--surface-3);overflow:hidden}
+.confbar i{display:block;height:100%;background:var(--brand)}
+
+/* outreach */
+.outk{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--brand-ink);margin:14px 0 7px;display:flex;align-items:center;gap:7px}
+.outmeta{font-size:11.5px;color:var(--muted);margin-bottom:8px}
+.outmeta b{color:var(--ink)}
+textarea{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:11px 12px;color:var(--ink);
+  font-family:var(--sans);font-size:12.5px;line-height:1.55;resize:vertical;min-height:118px}
+textarea:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-wash)}
+.dact{display:flex;gap:9px;margin-top:11px;flex-wrap:wrap}
+.btn{border:0;border-radius:10px;padding:9px 14px;font-size:12.5px;font-weight:650;cursor:pointer;transition:.16s;display:inline-flex;align-items:center;gap:7px}
+.btn.primary{background:var(--brand);color:#fff;box-shadow:var(--shadow-sm)}
+.btn.primary:hover{background:var(--brand-ink)}
+.btn.soft{background:var(--surface-3);color:var(--ink);border:1px solid var(--border)}
+.btn.soft:hover{border-color:var(--border-strong)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.pendbox{margin-top:12px;background:var(--warn-wash);border:1px solid var(--warn-line);border-radius:11px;padding:12px 13px}
+.pendbox .t{font-weight:650;font-size:13px;color:var(--warn);display:flex;align-items:center;gap:7px}
+.pendbox p{margin:6px 0 0;font-size:12px;color:var(--muted);line-height:1.5}
+.metbox{margin-top:12px;background:var(--met-wash);border:1px solid var(--met-line);border-radius:11px;padding:12px 13px}
+.metbox .t{font-weight:650;font-size:13px;color:var(--met);display:flex;align-items:center;gap:7px}
+.metbox p{margin:6px 0 0;font-size:12px;color:var(--muted);line-height:1.5}
+.metbox p b{color:var(--ink)}
+
+/* submit footer of console */
+.subfoot{padding:14px 20px;border-top:1px solid var(--border);background:var(--surface-2);display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.subfoot .msg{font-size:12.5px;color:var(--muted);flex:1;min-width:200px}
+.subfoot .msg b{color:var(--ink)}
+.btn.submit{background:var(--met);color:#fff;font-size:13.5px;padding:11px 18px}
+.btn.submit:hover{background:color-mix(in srgb,var(--met) 85%,#000)}
+.done{display:flex;align-items:center;gap:10px;color:var(--met);font-weight:650;font-size:13.5px}
+
+/* toast */
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--surface);
+  padding:11px 17px;border-radius:12px;font-size:13px;font-weight:600;box-shadow:var(--shadow-lg);opacity:0;pointer-events:none;transition:.28s;z-index:50;display:flex;align-items:center;gap:9px}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* footer / colophon */
+.colophon{margin-top:30px;display:grid;grid-template-columns:1.35fr 1fr;gap:16px}
+@media(max-width:860px){.colophon{grid-template-columns:1fr}}
+.col{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow-sm)}
+.col h5{margin:0 0 8px;font-size:11px;font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
+.col p{margin:0 0 8px;font-size:12.8px;color:var(--muted);line-height:1.6}
+.col p:last-child{margin-bottom:0}
+.col b{color:var(--ink);font-weight:600}
+.sig{margin-top:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-top:15px;border-top:1px solid var(--border)}
+.sig .made{font-weight:650;font-size:14px}
+.sig .made a{font-weight:700}
+.sig .role{font-size:12px;color:var(--faint)}
+.footnote{margin-top:14px;font-size:11px;color:var(--faint);line-height:1.6;max-width:92ch}
+.footnote b{color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- masthead -->
+  <div class="mast">
+    <div class="brand">
+      <div class="logo">t</div>
+      <div><div class="bt">Tennr · Path to Yes</div><div class="bs">Prior-authorization gap workspace — concept</div></div>
+    </div>
+    <div class="grow"></div>
+    <button class="ghost" id="reset" title="Reset the scenario">↺ Reset scenario</button>
+    <div class="tframe" role="group" aria-label="Theme">
+      <button data-theme="light" aria-pressed="false">☀︎ Light</button>
+      <button data-theme="auto" aria-pressed="true">◐ Auto</button>
+      <button data-theme="dark" aria-pressed="false">☾ Dark</button>
+    </div>
+  </div>
+
+  <!-- hero / framing -->
+  <div class="hero">
+    <div class="kick">Concept · Product Designer</div>
+    <h1>The gap between what a referral arrives with and what the payer requires.</h1>
+    <p class="lede">Tennr's <b>RaeLM</b> reads an inbound referral and validates it against payer criteria to cut denials — auto-completing the clean ones. But the referral that <i>doesn't</i> clear lands on a human, who has to figure out, fast, <b>exactly what is missing to get to yes</b>. This is that surface: the payer's medical-necessity checklist on one side, what RaeLM extracted versus what's still missing on the other, and an auto-drafted request to the referring provider for every gap — turning "denied for missing documentation" into a guided path to an approved authorization.</p>
+  </div>
+
+  <!-- real published benchmarks -->
+  <div class="bench" aria-label="Tennr published results">
+    <div class="bc b1"><div class="n">98%</div><div class="l">reduction in first-time claim denials with payer-ready documentation</div><div class="src">Tennr, published</div></div>
+    <div class="bc b2"><div class="n">8,000+</div><div class="l">sets of payer criteria RaeLM is trained to check a referral against</div><div class="src">Tennr / RaeLM</div></div>
+    <div class="bc b3"><div class="n">$2.2M</div><div class="l">lost per year by the average independent provider to referral-backlog denials</div><div class="src">Tennr Benchmark Report</div></div>
+    <div class="bc b4"><div class="n">157%</div><div class="l">more referrals processed per person at NMA after deploying Tennr</div><div class="src">Tennr customer story</div></div>
+  </div>
+
+  <!-- console -->
+  <div class="console">
+    <div class="cbar">
+      <div class="ct"><span class="dot"></span> Referral intake · exception queue</div>
+      <span class="chip">Autopilot <b id="apstate">paused — needs review</b></span>
+      <div class="grow"></div>
+      <span class="chip live" id="clock">● live workspace</span>
+    </div>
+
+    <div class="split">
+      <!-- left rail: queue + threshold -->
+      <aside class="rail">
+        <div class="railh"><span>Flagged referrals</span><span id="qcount">3 need review</span></div>
+        <div class="queue" id="queue"></div>
+
+        <div class="thr">
+          <h4>⚙︎ Autopilot confidence threshold</h4>
+          <p>Tennr lets an operator tune how sure RaeLM must be before it auto-completes a field. Everything below the line routes here, to a human.</p>
+          <div class="slrow">
+            <input type="range" id="thr" min="90" max="99.5" step="0.5" value="97">
+            <span class="tval" id="thrval">97.0%</span>
+          </div>
+          <div class="thrread" id="thrread"></div>
+        </div>
+      </aside>
+
+      <!-- work area -->
+      <section class="work">
+        <div class="rhead">
+          <div class="rtop">
+            <div class="rtitle" id="rtitle">—<span class="synthtag">Illustrative · synthetic, no real PHI</span></div>
+          </div>
+          <div class="rfacts" id="rfacts"></div>
+
+          <div class="p2y">
+            <div class="p2yhead">
+              <div class="verdict" id="verdict"><span class="vico">!</span> <span id="vtext">—</span></div>
+              <div class="risknum"><b id="risknum">—</b><span>projected first-pass<br>denial risk</span></div>
+            </div>
+            <div class="seg" id="seg"></div>
+            <div class="p2ymeta">
+              <span class="d"><span class="sw met"></span> <span id="cmet">0</span> criteria met</span>
+              <span class="d"><span class="sw pending"></span> <span id="cpend">0</span> requested</span>
+              <span class="d"><span class="sw gap"></span> <span id="cgap">0</span> missing</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="body">
+          <div class="crits">
+            <div class="crith"><span>Payer medical-necessity criteria</span><span id="critprog">0 / 0</span></div>
+            <div id="crits"></div>
+          </div>
+          <div class="drawer" id="drawer"></div>
+        </div>
+
+        <div class="subfoot" id="subfoot"></div>
+      </section>
+    </div>
+  </div>
+
+  <!-- colophon / footer -->
+  <div class="colophon">
+    <div class="col">
+      <h5>Why this surface</h5>
+      <p>Tennr's whole promise is <b>validating a referral against payer requirements to cut denials</b> — and its published result is a <b>98% drop in first-time denials</b>. The referrals RaeLM can't auto-clear are exactly the ones with a documentation gap, and closing that gap is where same-day intake is actually won or lost. Talkiatry cut fax processing from <b>24–48 hours to ~1 minute</b> and replaced <b>1–3 manual follow-ups</b> per missing-info case with automated outreach — the "Communications Coordination" loop this workspace makes visible.</p>
+      <p>The three flagged referrals span Tennr's real verticals — <b>sleep / DME, home health, and infusion</b> — to show one gap-closing pattern that generalizes across payer criteria, not a single hard-coded screen.</p>
+    </div>
+    <div class="col">
+      <h5>Grounded in my own work</h5>
+      <p>For <b>Capital Market Solutions (RSMS)</b> I designed a regulatory exception-management console — the single view where a compliance team investigates and resolves flagged cases — which <b>cut manual reporting errors 25%</b>. The "what fired, what's missing, close the loop" pattern here is the same discipline.</p>
+      <p>On the <b>UnitedHealthcare</b> ethical-AI pilot I designed the Medicare coverage-determination and billing UX, mapping the patient journey and embedding human oversight at every decision point.</p>
+      <div class="sig">
+        <div class="made">Made by Shrutika Rajput — <a href="https://shrutikarajput.com" target="_blank" rel="noopener">shrutikarajput.com</a></div>
+        <div class="role">Design Strategist · UX &amp; AI Systems Designer</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footnote">
+    <b>Sourcing.</b> Company figures (98% first-time-denial reduction; RaeLM trained on 100M+ documents, 2.3B data fields, 8,000+ criteria sets; tunable Autopilot ≈50% auto-complete at 97% / ≈20% at 99%; the $2.2M benchmark; NMA 157%, Talkiatry 24–48h→~1min, Home Medix 4× volume) are Tennr's own published claims and customer stories. The payer criteria shown (CPAP E0601 / dx G47.33 face-to-face-within-30-days, qualifying PSG/HSAT, AHI ≥ 15 or 5–14 with comorbidity, dated written order; home-health face-to-face and homebound documentation; infusion step-therapy and TB/hepatitis screening) reflect real Medicare / DME-MAC and commercial medical-necessity rules. All patient names, dates, fax contents, and confidence values are <b>synthetic and illustrative</b> — no real PHI. An independent concept by Shrutika Rajput; not affiliated with or endorsed by Tennr.
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+/* ---------------------------------------------------------------
+   Data model. Three flagged referrals across Tennr's real verticals.
+   Criterion status: 'met' | 'gap' | 'pending'
+   Extracted confidence drives the Autopilot-threshold interaction.
+--------------------------------------------------------------- */
+const DATA = [
+  {
+    id:"r1", vertical:"Sleep / DME", patient:"Marcus D.",
+    order:"CPAP device", codes:"HCPCS E0601 · Dx G47.33 (OSA)",
+    payer:"Medicare DME MAC", plan:"CPAP LCD (L33718 pattern)",
+    provider:"Lakeside Pulmonology", faxNo:"(555) 0142",
+    source:"Inbound fax · 6 pages · 14 min ago",
+    criteria:[
+      { id:"c1", label:"Face-to-face clinical evaluation", weight:2, status:"met",
+        requirement:"An in-person clinical evaluation is required within 30 days before the qualifying sleep study.",
+        extracted:{value:"Office visit 05/28 · Dr. Alvarez", source:"Fax p.2", confidence:0.98,
+          fax:"OFFICE VISIT — 05/28/2026\nProvider: Alvarez, R. MD\nChief complaint: loud snoring,\nwitnessed apneas, daytime somnolence.\nEpworth 14/24. Plan: order sleep study."},
+        finding:"RaeLM matched an in-person evaluation 27 days before the study — inside the 30-day window." },
+      { id:"c2", label:"Qualifying sleep study on file", weight:3, status:"gap",
+        requirement:"A scored sleep study (in-lab polysomnography or home sleep apnea test) is required to verify severity.",
+        extracted:{value:"Summary letter cites “moderate OSA”", source:"Fax p.5", confidence:0.71,
+          fax:"RE: Marcus D.\nImpression: moderate obstructive\nsleep apnea. Recommend PAP therapy.\n— scored report not attached —",
+          missing:true},
+        finding:"The fax includes a one-page summary letter, but no scored PSG/HSAT report is attached. “Moderate” is not an accepted substitute for a scored study.",
+        resolves:"c3",
+        resolveNote:"Lakeside faxed the scored HSAT report — <b>AHI 22.4 events/hr</b>, attached to the record.",
+        outreach:{ channel:"Fax → Lakeside Pulmonology · (555) 0142",
+          subject:"Records request — sleep study for CPAP prior auth (Marcus D.)",
+          body:"Hello Lakeside Pulmonology team,\n\nWe've received your CPAP referral for Marcus D. and are preparing the prior authorization. One item is needed to complete it:\n\n• The full scored sleep study (polysomnography or HSAT) showing the Apnea-Hypopnea Index (AHI/RDI). Your fax includes the summary letter, but not the scored report the payer requires to confirm severity.\n\nYou can fax it back to this number and we'll attach it to the record automatically. This is the only document standing between this patient and an approved authorization.\n\nThank you,\nIntake team" } },
+      { id:"c3", label:"Severity meets AHI threshold", weight:3, status:"pending", dependsOn:"c2",
+        requirement:"AHI/RDI ≥ 15, or 5–14 with a documented comorbidity (hypertension, cardiovascular disease, or excessive daytime sleepiness).",
+        extracted:null,
+        finding:"Cannot be confirmed until the scored study arrives. Resolves automatically once criterion 2 is closed.",
+        resolveNote:"Scored HSAT shows <b>AHI 22.4 ≥ 15</b> — severity threshold met." },
+      { id:"c4", label:"Signed &amp; dated written order", weight:2, status:"gap",
+        requirement:"DME MAC requires a written order that is both signed and dated by the treating physician.",
+        extracted:{value:"Order signed, but undated", source:"Fax p.4", confidence:0.88,
+          fax:"STANDARD WRITTEN ORDER\nItem: CPAP (E0601)\nSignature: R. Alvarez, MD /s/\nDate: __________  ← blank",
+          missing:true},
+        finding:"Order and physician signature are present, but the order date field is blank. An undated order is denied on submission.",
+        resolveNote:"Corrected order returned — signed and <b>dated 06/03</b> by Dr. Alvarez.",
+        outreach:{ channel:"Fax → Lakeside Pulmonology · (555) 0142",
+          subject:"Signature date needed — CPAP order (Marcus D.)",
+          body:"Hello Lakeside Pulmonology team,\n\nThe CPAP order for Marcus D. is signed but not dated. The DME payer requires a signed and dated written order before we can submit.\n\n• Please return a dated copy of the order, or a brief dated addendum.\n\nWe'll close the loop the moment it arrives.\n\nThank you,\nIntake team" } },
+      { id:"c5", label:"Diagnosis coded (ICD-10)", weight:1, status:"met",
+        requirement:"A supporting OSA diagnosis code must be documented on the order.",
+        extracted:{value:"G47.33 — Obstructive sleep apnea", source:"Fax p.1", confidence:0.97,
+          fax:"Referral cover sheet\nDx: G47.33 Obstructive sleep\napnea (adult)"},
+        finding:"ICD-10 G47.33 present on the referral cover sheet." },
+      { id:"c6", label:"Device &amp; pressure settings", weight:1, status:"met",
+        requirement:"The ordered device and prescribed pressure settings must be specified.",
+        extracted:{value:"CPAP, auto-titrating 5–15 cm H₂O", source:"Fax p.3", confidence:0.95,
+          fax:"Rx: CPAP, auto mode\nPressure range 5–15 cm H2O\nHumidification: heated"},
+        finding:"Device and titratable pressure range specified on the order." }
+    ]
+  },
+  {
+    id:"r2", vertical:"Home Health", patient:"Eleanor V.",
+    order:"Skilled nursing — start of care", codes:"Dx I50.9 (CHF)",
+    payer:"Medicare — Home Health", plan:"Conditions of Participation",
+    provider:"St. Mark's Cardiology", faxNo:"(555) 0187",
+    source:"Inbound fax · 4 pages · 32 min ago",
+    criteria:[
+      { id:"h1", label:"Face-to-face encounter documented", weight:3, status:"gap",
+        requirement:"A physician face-to-face encounter is required within 90 days before, or 30 days after, the start of care, and must relate to the primary reason for home health.",
+        extracted:{value:"Encounter referenced, no date/note", source:"Fax p.1", confidence:0.64,
+          fax:"Discharge summary references a\ncardiology visit — encounter note\nand date not attached.", missing:true},
+        finding:"The discharge summary mentions a cardiology visit, but no dated encounter note is attached to substantiate it.",
+        resolveNote:"St. Mark's returned the <b>F2F encounter note dated 06/01</b>, tied to CHF exacerbation.",
+        outreach:{ channel:"Fax → St. Mark's Cardiology · (555) 0187",
+          subject:"Face-to-face encounter note needed — home health SOC (Eleanor V.)",
+          body:"Hello St. Mark's Cardiology team,\n\nWe're opening the home-health start of care for Eleanor V. Medicare requires the physician face-to-face encounter note tied to the reason for home health.\n\n• Please fax the dated encounter note (within 90 days before / 30 days after start of care) documenting the CHF-related visit.\n\nWe'll attach it and proceed. Thank you,\nIntake team" } },
+      { id:"h2", label:"Homebound status documented", weight:3, status:"gap",
+        requirement:"The record must document that the patient is homebound — leaving home requires considerable, taxing effort.",
+        extracted:null,
+        finding:"No narrative establishing homebound status is present in the referral packet.",
+        resolveNote:"Physician narrative added — <b>homebound: dyspnea on minimal exertion, ambulates &lt;20 ft with walker</b>.",
+        outreach:{ channel:"Fax → St. Mark's Cardiology · (555) 0187",
+          subject:"Homebound narrative needed — home health SOC (Eleanor V.)",
+          body:"Hello St. Mark's Cardiology team,\n\nTo authorize home health for Eleanor V., the record needs a brief physician narrative establishing homebound status (why leaving home is a considerable and taxing effort).\n\n• A sentence or two on functional limitation (e.g., dyspnea on exertion, assistive device, distance tolerated) is sufficient.\n\nThank you,\nIntake team" } },
+      { id:"h3", label:"Signed physician order for skilled services", weight:2, status:"met",
+        requirement:"A signed order for skilled nursing services is required.",
+        extracted:{value:"Signed order, skilled nursing 2×/wk", source:"Fax p.2", confidence:0.96,
+          fax:"ORDER: Skilled nursing 2x/week\n× 60 days. Signed: J. Okafor, MD"},
+        finding:"Signed skilled-nursing order present with frequency and duration." },
+      { id:"h4", label:"Plan of care elements present", weight:1, status:"met",
+        requirement:"Plan of care must include diagnoses, services, frequency, and goals.",
+        extracted:{value:"POC with goals & frequency", source:"Fax p.3", confidence:0.93,
+          fax:"Plan of care: CHF management,\nweights daily, med reconciliation,\ngoal: no readmission 30d."},
+        finding:"Plan-of-care elements (services, frequency, goals) documented." },
+      { id:"h5", label:"Primary diagnosis coded", weight:1, status:"met",
+        requirement:"A primary diagnosis code must be documented.",
+        extracted:{value:"I50.9 — Heart failure, unspecified", source:"Fax p.1", confidence:0.97,
+          fax:"Primary Dx: I50.9 Heart failure"},
+        finding:"Primary diagnosis I50.9 present." }
+    ]
+  },
+  {
+    id:"r3", vertical:"Infusion", patient:"Priya S.",
+    order:"Infliximab infusion", codes:"HCPCS J1745 · Dx K50.90 (Crohn's)",
+    payer:"UnitedHealthcare (commercial)", plan:"Specialty prior authorization",
+    provider:"Gastro Associates", faxNo:"portal",
+    source:"Referral portal · 8 pages · 1 hr ago",
+    criteria:[
+      { id:"i1", label:"Diagnosis documented with ICD-10", weight:1, status:"met",
+        requirement:"A qualifying diagnosis with ICD-10 code must be documented.",
+        extracted:{value:"K50.90 — Crohn's disease, unspecified", source:"Portal p.1", confidence:0.97,
+          fax:"Dx: K50.90 Crohn's disease,\nunspecified, without complications."},
+        finding:"Qualifying diagnosis K50.90 documented." },
+      { id:"i2", label:"Step therapy / prior treatment", weight:3, status:"gap",
+        requirement:"Documentation of an inadequate response or intolerance to conventional therapy is required before a biologic is authorized.",
+        extracted:null,
+        finding:"No record of prior conventional therapy (e.g., corticosteroid or immunomodulator trial) is attached. The payer will deny a biologic without it.",
+        resolveNote:"Chart notes added — <b>failed budesonide + azathioprine trial</b> over 5 months documented.",
+        outreach:{ channel:"Portal message → Gastro Associates",
+          subject:"Step-therapy documentation needed — infliximab PA (Priya S.)",
+          body:"Hello Gastro Associates team,\n\nWe're submitting the infliximab prior authorization for Priya S. The payer requires documentation of prior conventional therapy before a biologic.\n\n• Please attach chart notes showing an inadequate response or intolerance to conventional therapy (e.g., corticosteroid and/or immunomodulator), with approximate dates.\n\nThat closes the last gap on this authorization. Thank you,\nIntake team" } },
+      { id:"i3", label:"Recent TB / hepatitis screening", weight:2, status:"gap",
+        requirement:"TB screening and a hepatitis panel within the last 90 days are required before starting a biologic.",
+        extracted:{value:"Hep panel on file; TB result missing", source:"Portal p.4", confidence:0.69,
+          fax:"Labs: Hep B/C panel 05/2026 —\nnegative. TB (QuantiFERON):\nresult not on file.", missing:true},
+        finding:"Hepatitis panel is present and recent, but no TB screening result (QuantiFERON/PPD) is on file within the window.",
+        resolveNote:"TB result returned — <b>QuantiFERON negative, 06/02</b> — within the 90-day window.",
+        outreach:{ channel:"Portal message → Gastro Associates",
+          subject:"TB screening result needed — infliximab PA (Priya S.)",
+          body:"Hello Gastro Associates team,\n\nThe infliximab authorization for Priya S. needs one lab. The hepatitis panel is on file; the TB screening result is not.\n\n• Please attach the recent TB screening result (QuantiFERON or PPD) within the last 90 days.\n\nThank you,\nIntake team" } },
+      { id:"i4", label:"Dosing &amp; frequency specified", weight:1, status:"met",
+        requirement:"Weight-based dose and infusion schedule must be specified.",
+        extracted:{value:"5 mg/kg, wk 0/2/6 then q8w", source:"Portal p.2", confidence:0.94,
+          fax:"Infliximab 5 mg/kg IV\nInduction wk 0, 2, 6, then\nmaintenance every 8 weeks."},
+        finding:"Weight-based dose and standard induction/maintenance schedule specified." },
+      { id:"i5", label:"Provider NPI &amp; signature", weight:1, status:"met",
+        requirement:"Ordering provider NPI and signature are required.",
+        extracted:{value:"NPI + signature present", source:"Portal p.8", confidence:0.99,
+          fax:"Ordering: M. Chen, MD\nNPI 1760xxxxxx · signed"},
+        finding:"Ordering provider NPI and signature captured." }
+    ]
+  }
+];
+
+/* ---------------- state ---------------- */
+let refs = clone(DATA);
+let activeId = "r1";
+let selectedId = null;
+let threshold = 97;
+
+function clone(x){ return JSON.parse(JSON.stringify(x)); }
+function active(){ return refs.find(r=>r.id===activeId); }
+function crit(id){ return active().criteria.find(c=>c.id===id); }
+
+/* ---------------- risk + progress ---------------- */
+function progress(r){
+  let met=0,gap=0,pend=0,totW=0,unmetW=0;
+  r.criteria.forEach(c=>{
+    totW+=c.weight;
+    if(c.status==="met") met++;
+    else { unmetW+=c.weight; if(c.status==="gap") gap++; else pend++; }
+  });
+  const risk = Math.round(8 + 84*(unmetW/totW));
+  const ready = gap===0 && pend===0;
+  return {met,gap,pend,total:r.criteria.length,risk,ready};
+}
+
+/* Autopilot threshold: how much of THIS referral RaeLM would auto-accept,
+   plus Tennr's real published anchors (≈50% at 97%, ≈20% at 99%). */
+function autopilot(r,t){
+  const extracted = r.criteria.filter(c=>c.extracted);
+  const auto = extracted.filter(c=>c.extracted.confidence*100 >= t).length;
+  // published anchor curve, for context copy
+  let anchor;
+  if(t<=95) anchor="~65%"; else if(t<=97) anchor="~50%"; else if(t<=98.5) anchor="~35%"; else anchor="~20%";
+  return {auto, total:extracted.length, anchor};
+}
+
+/* ---------------- rendering ---------------- */
+function renderQueue(){
+  const q = document.getElementById("queue");
+  q.innerHTML = refs.map(r=>{
+    const p = progress(r);
+    const segs = r.criteria.map(c=>`<i style="flex:${c.weight};background:var(--${c.status==='met'?'met':c.status==='pending'?'warn':'gap'})"></i>`).join("");
+    const tag = p.ready
+      ? `<span class="mini ok">payer-ready</span>`
+      : `<span class="mini gap">${p.gap+p.pend} to close</span>`;
+    return `<button class="qcard" data-ref="${r.id}" aria-current="${r.id===activeId}">
+      <div class="qtop"><span class="qname">${r.patient}</span><span class="qvert">${r.vertical}</span></div>
+      <div class="qmeta">${r.order} · <span class="mono">${r.payer}</span></div>
+      <div class="qbar">${segs}</div>
+      <div class="qmeta" style="margin-top:8px">${tag}<span style="color:var(--faint)">${p.met}/${p.total} met</span></div>
+    </button>`;
+  }).join("");
+  document.getElementById("qcount").textContent = refs.filter(r=>!progress(r).ready).length + " need review";
+}
+
+function renderThreshold(){
+  const t = threshold;
+  document.getElementById("thrval").textContent = t.toFixed(1)+"%";
+  const slider = document.getElementById("thr");
+  const pct = ((t-90)/(99.5-90))*100;
+  slider.style.setProperty("--fill", pct+"%");
+  const ap = autopilot(active(),t);
+  document.getElementById("thrread").innerHTML =
+    `On this referral, RaeLM would auto-accept <b>${ap.auto} of ${ap.total}</b> extracted fields at ${t.toFixed(1)}% — the rest route here.<br>
+     <span style="color:var(--faint)">Tennr, published — at 97% ≈ <b>50%</b> of volume auto-completes; at 99% ≈ <b>20%</b>. Here: ${ap.anchor}.</span>`;
+}
+
+function renderHead(){
+  const r = active();
+  document.getElementById("rtitle").innerHTML =
+    `${r.order} — ${r.patient} <span class="synthtag">Illustrative · synthetic, no real PHI</span>`;
+  document.getElementById("rfacts").innerHTML = `
+    <span><span class="k">Payer</span><b>${r.payer}</b></span>
+    <span><span class="k">Policy</span><b>${r.plan}</b></span>
+    <span><span class="k">Codes</span><b class="mono">${r.codes}</b></span>
+    <span><span class="k">Referrer</span><b>${r.provider}</b></span>
+    <span><span class="k">Source</span>${r.source}</span>`;
+
+  const p = progress(r);
+  const seg = document.getElementById("seg");
+  seg.innerHTML = r.criteria.map(c=>`<i class="${c.status}" style="flex:${c.weight}"></i>`).join("");
+  document.getElementById("cmet").textContent = p.met;
+  document.getElementById("cpend").textContent = p.pend;
+  document.getElementById("cgap").textContent = p.gap;
+  document.getElementById("risknum").textContent = p.risk+"%";
+  document.getElementById("critprog").textContent = p.met+" / "+p.total;
+
+  const v = document.getElementById("verdict");
+  const vt = document.getElementById("vtext");
+  const rn = document.getElementById("risknum");
+  v.classList.remove("deny","risk","ready");
+  if(p.ready){ v.classList.add("ready"); v.querySelector(".vico").textContent="✓";
+    vt.textContent="Payer-ready — projected first-pass approval"; rn.querySelector("b").style.color="var(--met)"; }
+  else if(p.gap===0){ v.classList.add("risk"); v.querySelector(".vico").textContent="…";
+    vt.textContent="At risk — awaiting requested records"; rn.querySelector("b").style.color="var(--warn)"; }
+  else { v.classList.add("deny"); v.querySelector(".vico").textContent="!";
+    vt.textContent="Will be denied — missing documentation"; rn.querySelector("b").style.color="var(--gap)"; }
+
+  document.getElementById("apstate").textContent = p.ready ? "cleared — ready to submit" : "paused — needs review";
+}
+
+function renderCrits(){
+  const r = active();
+  const box = document.getElementById("crits");
+  box.innerHTML = r.criteria.map(c=>{
+    const belowThr = c.extracted && c.extracted.confidence*100 < threshold;
+    let valLine;
+    if(c.status==="met"){
+      valLine = c.extracted
+        ? `Found <b>${c.extracted.value}</b> · <span class="mono">${c.extracted.source}</span>`
+        : `<b>Received</b> — record returned by the provider and attached to the referral.`;
+    } else if(c.status==="pending"){
+      valLine = `<b>Requested</b> — waiting on referring provider to close the loop.`;
+    } else {
+      valLine = c.extracted
+        ? `<b style="color:var(--gap)">Missing</b> — ${c.extracted.value} · <span class="mono">${c.extracted.source}</span>`
+        : `<b style="color:var(--gap)">Missing</b> — nothing on file for this criterion.`;
+    }
+    const tagTxt = c.status==="met" ? "met" : c.status==="pending" ? "requested" : "gap";
+    const flag = (belowThr && c.status!=="pending")
+      ? `<span class="cflag">⚑ below ${threshold.toFixed(1)}% — needs human confirm</span>` : "";
+    const stIco = c.status==="met" ? "✓" : c.status==="pending" ? "…" : "!";
+    return `<button class="crit ${c.status}" data-crit="${c.id}" aria-current="${c.id===selectedId}">
+      <div class="crow">
+        <span class="st ${c.status}">${stIco}</span>
+        <span class="clabel">${c.label}</span>
+        <span class="ctag ${c.status}">${tagTxt}</span>
+      </div>
+      <div class="cval">${valLine}${flag}</div>
+    </button>`;
+  }).join("");
+}
+
+function confPct(c){ return Math.round(c.extracted.confidence*100); }
+
+function renderDrawer(){
+  const d = document.getElementById("drawer");
+  if(!selectedId){
+    d.innerHTML = `<div class="dempty"><span class="big">◧</span>Select a criterion to see what RaeLM found, why it fired, and — for a gap — the auto-drafted request that closes it.</div>`;
+    return;
+  }
+  const c = crit(selectedId);
+  let html = `<div class="dkick">${c.status==='met'?'Verified':c.status==='pending'?'Requested':'Documentation gap'}</div>
+    <div class="dtitle"><span class="st ${c.status}" style="width:18px;height:18px;font-size:11px">${c.status==='met'?'✓':c.status==='pending'?'…':'!'}</span>${c.label}</div>
+    <div class="dreq"><div class="lab">Payer requires</div><p>${c.requirement}</p></div>
+    <div class="dreq"><div class="lab">RaeLM finding</div><p class="src">${c.finding}</p></div>`;
+
+  // evidence / fax snippet
+  if(c.extracted){
+    const cp = confPct(c);
+    html += `<div class="fax">
+      <div class="faxh">▤ ${c.extracted.source} · RaeLM extraction</div>
+      <div class="faxb">${c.extracted.fax.replace(/</g,'&lt;')}</div>
+    </div>
+    <div class="conf">confidence <div class="confbar"><i style="width:${cp}%;background:${cp*1>=threshold?'var(--met)':'var(--warn)'}"></i></div> <span class="mono">${cp}%</span> ${cp<threshold?'· below threshold':''}</div>`;
+  }
+
+  // action zone by status
+  if(c.status==="gap"){
+    html += `<div class="outk">✎ Communications Coordination — auto-drafted request</div>
+      <div class="outmeta"><b>${c.outreach.channel}</b><br>Subject — ${c.outreach.subject}</div>
+      <textarea id="outbody" spellcheck="false">${c.outreach.body}</textarea>
+      <div class="dact">
+        <button class="btn primary" data-send="${c.id}">➤ Send request to provider</button>
+      </div>`;
+  } else if(c.status==="pending"){
+    html += `<div class="pendbox">
+      <div class="t">⏳ Request sent — loop open</div>
+      <p>Sent to <b>the referring provider</b>. Tennr close-the-loop faxes keep them informed automatically; the record attaches itself when it returns.</p>
+      </div>
+      <div class="dact"><button class="btn soft" data-resolve="${c.id}">↩ Simulate provider response</button></div>`;
+  } else {
+    html += `<div class="metbox"><div class="t">✓ Criterion met</div>
+      <p>${c.metText || 'Verified against the payer policy from the extracted evidence above.'}</p></div>`;
+  }
+  d.innerHTML = html;
+
+  const ta = document.getElementById("outbody");
+  if(ta) ta.addEventListener("input", ()=>{ crit(selectedId).outreach.body = ta.value; });
+}
+
+function renderSubfoot(){
+  const r = active();
+  const p = progress(r);
+  const f = document.getElementById("subfoot");
+  if(r.submitted){
+    f.innerHTML = `<div class="done">✓ Prior authorization submitted — payer-ready packet assembled for ${r.payer}.</div>
+      <div class="grow"></div><div class="msg">Every correction here returns to RaeLM as a training signal, so the next referral like this one clears on its own.</div>`;
+    return;
+  }
+  if(p.ready){
+    f.innerHTML = `<div class="msg"><b>All ${p.total} criteria met.</b> Documentation is payer-ready — projected first-pass denial risk down to ${p.risk}%.</div>
+      <div class="grow"></div><button class="btn submit" id="submit">Submit prior authorization →</button>`;
+  } else {
+    const open = p.gap+p.pend;
+    f.innerHTML = `<div class="msg"><b>${open} ${open===1?'criterion':'criteria'}</b> still ${p.gap>0?'need documentation':'awaiting response'} before this can be submitted without a denial.</div>
+      <div class="grow"></div><button class="btn submit" disabled>Submit prior authorization →</button>`;
+  }
+}
+
+function renderAll(){ renderQueue(); renderThreshold(); renderHead(); renderCrits(); renderDrawer(); renderSubfoot(); }
+
+/* ---------------- actions ---------------- */
+function selectRef(id){ activeId=id; selectedId=null; renderAll(); }
+function selectCrit(id){ selectedId = (selectedId===id? null : id); renderCrits(); renderDrawer(); }
+
+function sendRequest(id){
+  const c = crit(id);
+  c.status = "pending";
+  renderAll();
+  toast("Request faxed to " + active().provider + " — loop open");
+}
+function resolveRequest(id){
+  const c = crit(id);
+  c.status = "met";
+  c.metText = c.resolveNote;
+  if(c.resolves){
+    const dep = crit(c.resolves);
+    if(dep && dep.status==="pending"){ dep.status="met"; dep.metText = dep.resolveNote; }
+  }
+  renderAll();
+  const p = progress(active());
+  toast(p.ready ? "Gap closed — referral is now payer-ready ✓" : "Record received — criterion met");
+}
+function submitPA(){
+  active().submitted = true;
+  renderAll();
+  toast("Prior authorization submitted ✓");
+}
+
+/* ---------------- events (delegated) ---------------- */
+document.getElementById("queue").addEventListener("click", e=>{
+  const b = e.target.closest("[data-ref]"); if(b) selectRef(b.dataset.ref);
+});
+document.getElementById("crits").addEventListener("click", e=>{
+  const b = e.target.closest("[data-crit]"); if(b) selectCrit(b.dataset.crit);
+});
+document.getElementById("drawer").addEventListener("click", e=>{
+  const s = e.target.closest("[data-send]");    if(s){ sendRequest(s.dataset.send); return; }
+  const r = e.target.closest("[data-resolve]"); if(r){ resolveRequest(r.dataset.resolve); return; }
+});
+document.getElementById("subfoot").addEventListener("click", e=>{
+  if(e.target.closest("#submit")) submitPA();
+});
+document.getElementById("thr").addEventListener("input", e=>{
+  threshold = parseFloat(e.target.value);
+  renderThreshold(); renderCrits(); if(selectedId) renderDrawer();
+});
+document.getElementById("reset").addEventListener("click", ()=>{
+  refs = clone(DATA); activeId="r1"; selectedId=null; threshold=97;
+  document.getElementById("thr").value = 97;
+  renderAll(); toast("Scenario reset");
+});
+
+/* theme */
+const root = document.documentElement;
+function setTheme(t){
+  root.setAttribute("data-theme", t);
+  document.querySelectorAll(".tframe button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.theme===t));
+  try{ localStorage.setItem("tennr-theme", t); }catch(e){}
+}
+document.querySelectorAll(".tframe button").forEach(b=> b.addEventListener("click", ()=>setTheme(b.dataset.theme)) );
+(function(){ let t="auto"; try{ t = localStorage.getItem("tennr-theme")||"auto"; }catch(e){} setTheme(t); })();
+
+/* toast */
+let toastTimer;
+function toast(msg){
+  const el = document.getElementById("toast");
+  el.innerHTML = "◆ " + msg;
+  el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.classList.remove("show"), 2600);
+}
+
+/* init */
+renderAll();
+</script>
+</body>
+</html>
