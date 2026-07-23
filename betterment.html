@@ -236,9 +236,9 @@ const CASES=[
    {i:"📱",w:"md",t:"New device + new IP (different state)",s:"First seen this session."}],
   timeline:[["09:02","Login from new device (TX)"],["09:14","Linked new external bank"],["09:41","Requested $18,400 withdrawal",1]],
   reason:"Fired on <b>new-destination + full-balance + new-device</b> within one session — the classic account-takeover cash-out shape. Bank-ownership check returned a partial name match, not a clean pass.",
-  verdict:"Recommend HOLD with bank re-verification, not a hard block. If it's really her, a 1-tap ownership confirm clears it in minutes; if not, the money never leaves.",,
+  verdict:"Recommend HOLD with bank re-verification, not a hard block. If it's really her, a 1-tap ownership confirm clears it in minutes; if not, the money never leaves.",
   combine:"new destination + full balance + new device, one session",
-  cust:"We've paused your $18,400 withdrawal for a quick check on the newly-added bank. Tap to confirm you own it — about a minute, and your money stays exactly where it is until you do."
+  cust:"We've paused your $18,400 withdrawal for a quick check on the newly-added bank. Tap to confirm you own it — about a minute, and your money stays exactly where it is until you do.",
   right:"ho"},
  {id:2,who:"J. Okafor",flow:"Signup → identity review",amt:"—",risk:"md",score:63,
   signals:[
@@ -247,9 +247,9 @@ const CASES=[
    {i:"📧",w:"ok",t:"Device + email age look normal",s:"Email 4 yrs old, residential IP."}],
   timeline:[["08:20","Started onboarding"],["08:24","Socure identity check → review",1],["08:25","Held pre-funding"]],
   reason:"A single bureau's address-DOB mismatch dropped this below the auto-approve line. Everything else is clean — the kind of false-positive that, at volume, is abandoned onboarding you paid to acquire.",
-  verdict:"Recommend APPROVE. This is friction on a real customer. Log it as a signal so the threshold learns this mismatch pattern is low-risk when SSN + watchlist are clean.",,
+  verdict:"Recommend APPROVE. This is friction on a real customer. Log it as a signal so the threshold learns this mismatch pattern is low-risk when SSN + watchlist are clean.",
   combine:"one bureau mismatch, everything else clean",
-  cust:"You're all set — welcome to Betterment. A routine identity check cleared in the background; nothing was needed from you."
+  cust:"You're all set — welcome to Betterment. A routine identity check cleared in the background; nothing was needed from you.",
   right:"ap"},
  {id:3,who:"D. Kim",flow:"Funding → deposit velocity",amt:"$9,950",risk:"md",score:58,
   signals:[
@@ -258,9 +258,9 @@ const CASES=[
    {i:"🕑",w:"ok",t:"6-year customer, steady history",s:"No prior flags."}],
   timeline:[["Mon","$9,950 deposit"],["Tue","$9,900 deposit"],["Wed","$9,800 deposit",1]],
   reason:"Amounts just under the $10k reporting line look like structuring — but this is a long-tenured customer on a verified primary bank, mid bonus-season. Shape matches a rule; context says benign.",
-  verdict:"Recommend APPROVE + note. Real structuring almost never rides a 6-year verified account. Hold here and you punish a loyal customer for depositing their own money.",,
+  verdict:"Recommend APPROVE + note. Real structuring almost never rides a 6-year verified account. Hold here and you punish a loyal customer for depositing their own money.",
   combine:"sub-$10k pattern vs 6-year verified account",
-  cust:"Your deposits are on their way in. Nothing needed on your end."
+  cust:"Your deposits are on their way in. Nothing needed on your end.",
   right:"ap"},
  {id:4,who:"R. Santos",flow:"Withdrawal → dormant reactivation",amt:"$44,200",risk:"hi",score:88,
   signals:[
@@ -269,9 +269,9 @@ const CASES=[
    {i:"🏦",w:"md",t:"New destination bank",s:"Added this session."}],
   timeline:[["11:03","Login after 14mo dormancy"],["11:05","Email changed"],["11:07","Password changed"],["11:23","Requested $44,200 → new bank",1]],
   reason:"Dormant reactivation + credential change + new destination + large amount is the highest-confidence takeover shape in the book. Every prior control existed to protect this exact moment.",
-  verdict:"Recommend ESCALATE to fraud + freeze. Do not auto-block silently (if it's really him after a life event, he needs a fast human path) — but money does not move until identity is re-established.",,
+  verdict:"Recommend ESCALATE to fraud + freeze. Do not auto-block silently (if it's really him after a life event, he needs a fast human path) — but money does not move until identity is re-established.",
   combine:"dormant + credential change + new bank + large amount",
-  cust:"To protect your account we've temporarily frozen this transfer and need to re-verify your identity. A specialist will reach you within the hour — if this was you, we'll make it fast."
+  cust:"To protect your account we've temporarily frozen this transfer and need to re-verify your identity. A specialist will reach you within the hour — if this was you, we'll make it fast.",
   right:"es"},
  {id:5,who:"P. Nguyen",flow:"Login → impossible travel",amt:"—",risk:"md",score:55,
   signals:[
@@ -280,9 +280,9 @@ const CASES=[
    {i:"📱",w:"ok",t:"Known device both logins",s:"VPN likely."}],
   timeline:[["14:10","Login NY (known device, MFA ok)"],["16:58","Login Lisbon (known device, MFA ok)",1]],
   reason:"'Impossible travel' fired, but MFA passed on the same enrolled device both times — the signature of a corporate VPN or travel, not takeover. A step-up here is friction nobody thanks you for.",
-  verdict:"Recommend APPROVE (no step-up). Reserve login friction for anomalies MFA can't explain. Feed this back so VPN-shaped travel stops paging a reviewer.",,
+  verdict:"Recommend APPROVE (no step-up). Reserve login friction for anomalies MFA can't explain. Feed this back so VPN-shaped travel stops paging a reviewer.",
   combine:"impossible travel vs MFA-passed known device",
-  cust:"Welcome back. Your sign-in checked out — no extra step needed."
+  cust:"Welcome back. Your sign-in checked out — no extra step needed.",
   right:"ap"},
  {id:6,who:"T. Brooks",flow:"Withdrawal → beneficiary change",amt:"$6,120",risk:"lo",score:41,
   signals:[
@@ -291,9 +291,9 @@ const CASES=[
    {i:"📱",w:"ok",t:"Known device, no anomalies",s:"Clean session."}],
   timeline:[["Prev","Added + verified bank (3 wks ago)"],["Today","Requested $6,120 withdrawal",0]],
   reason:"Landed in the queue only because ANY new-ish destination + withdrawal trips the current rule. But the bank is verified, name-matched, and already used. This is a threshold that's set too strict.",
-  verdict:"Recommend APPROVE. Then raise the auto-clear line for verified-and-used destinations — this case should never have reached a human. Use the slider above to see the queue shrink.",,
+  verdict:"Recommend APPROVE. Then raise the auto-clear line for verified-and-used destinations — this case should never have reached a human. Use the slider above to see the queue shrink.",
   combine:"new-ish destination, but verified and already used",
-  cust:"Your $6,120 withdrawal is on its way. Nothing needed."
+  cust:"Your $6,120 withdrawal is on its way. Nothing needed.",
   right:"ap"}
 ];
 let sel=null, caught=0, friction=0;
