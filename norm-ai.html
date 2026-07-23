@@ -1,274 +1,255 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Norm Ai — the sign-off surface (concept)</title>
+<title>Norm Ai · the sign-off surface , Shrutika Rajput</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#F5F6FA; --panel:#FFFFFF; --ink:#171A2B; --muted:#5D6480; --line:#E4E6F0;
-  --ind:#3D4CC4; --ind-soft:#E7E9FB; --amber:#946012; --amber-soft:#F6EDD8;
-  --red:#B23B45; --red-soft:#F8E4E7; --green:#227A54; --green-soft:#E2F1E9;
-  --chip:#EDEFF6; --hair:#EFF1F8;
+  --paper:#FDFAF6; --card:#FFFFFF; --ink:#2A2320; --muted:#8A7F73; --line:#ECE3D6; --hair:#F2EBE0;
+  --wine:#8B2D3A; --wine-soft:#F4E6E4; --chip:#F3EDE3;
+  --good:#4C7A5B; --good-soft:#E9F0E9; --amber:#9A6B2E; --amber-soft:#F5EBDB;
+  --crit:#8B2D3A; --crit-soft:#F4E3E1;
+  --serif:"Fraunces",Georgia,serif; --body:"Inter",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,monospace; --hand:"Caveat",cursive;
 }
 @media (prefers-color-scheme:dark){:root{
-  --bg:#0D0F1A; --panel:#161A2A; --ink:#E9EBF5; --muted:#9298B5; --line:#272C42;
-  --ind:#8A95F0; --ind-soft:#1E2350; --amber:#D9A94E; --amber-soft:#2C2413;
-  --red:#E4899A; --red-soft:#331D22; --green:#7FC49A; --green-soft:#152A20;
-  --chip:#1E2338; --hair:#1B2033;
+  --paper:#1B1713; --card:#241F1A; --ink:#EEE7DC; --muted:#9C9184; --line:#302A23; --hair:#282219;
+  --wine:#D98A93; --wine-soft:#33211F; --chip:#2A241D;
+  --good:#8CBE9C; --good-soft:#1B2A20; --amber:#D2A45E; --amber-soft:#2C2415;
+  --crit:#D98A93; --crit-soft:#33211F;
 }}
 :root[data-theme="dark"]{
-  --bg:#0D0F1A; --panel:#161A2A; --ink:#E9EBF5; --muted:#9298B5; --line:#272C42;
-  --ind:#8A95F0; --ind-soft:#1E2350; --amber:#D9A94E; --amber-soft:#2C2413;
-  --red:#E4899A; --red-soft:#331D22; --green:#7FC49A; --green-soft:#152A20;
-  --chip:#1E2338; --hair:#1B2033;
+  --paper:#1B1713; --card:#241F1A; --ink:#EEE7DC; --muted:#9C9184; --line:#302A23; --hair:#282219;
+  --wine:#D98A93; --wine-soft:#33211F; --chip:#2A241D;
+  --good:#8CBE9C; --good-soft:#1B2A20; --amber:#D2A45E; --amber-soft:#2C2415;
+  --crit:#D98A93; --crit-soft:#33211F;
 }
 :root[data-theme="light"]{
-  --bg:#F5F6FA; --panel:#FFFFFF; --ink:#171A2B; --muted:#5D6480; --line:#E4E6F0;
-  --ind:#3D4CC4; --ind-soft:#E7E9FB; --amber:#946012; --amber-soft:#F6EDD8;
-  --red:#B23B45; --red-soft:#F8E4E7; --green:#227A54; --green-soft:#E2F1E9;
-  --chip:#EDEFF6; --hair:#EFF1F8;
+  --paper:#FDFAF6; --card:#FFFFFF; --ink:#2A2320; --muted:#8A7F73; --line:#ECE3D6; --hair:#F2EBE0;
+  --wine:#8B2D3A; --wine-soft:#F4E6E4; --chip:#F3EDE3;
+  --good:#4C7A5B; --good-soft:#E9F0E9; --amber:#9A6B2E; --amber-soft:#F5EBDB;
+  --crit:#8B2D3A; --crit-soft:#F4E3E1;
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);
-  font:14px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
-.serif{font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif}
-.wrap{max-width:1180px;margin:0 auto;padding:0 20px 60px}
-.intro{padding:40px 0 22px;border-bottom:1px solid var(--line)}
-.eyebrow{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ind);font-weight:700}
-h1{font-size:clamp(1.7rem,3.6vw,2.4rem);margin:.3em 0 0;letter-spacing:-.015em;font-weight:600;text-wrap:balance}
-.sub{color:var(--muted);max-width:72ch;margin-top:10px;font-size:1.02rem}
-.sub em{font-style:normal;color:var(--ind);font-weight:600}
-.byl{margin-top:14px;font-size:.82rem;color:var(--muted)}
-.byl b{color:var(--ink)}
-.premise{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:22px 0 6px}
-@media(max-width:820px){.premise{grid-template-columns:1fr}}
-.pcard{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
-.pcard b{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:5px}
-.pcard span{font-size:.92rem} .pcard em{font-style:normal;color:var(--ind);font-weight:600}
-.app{background:var(--panel);border:1px solid var(--line);border-radius:16px;margin-top:26px;overflow:hidden}
-.appbar{display:flex;align-items:center;gap:14px;padding:13px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
-.logo{font-weight:700;display:flex;align-items:center;gap:8px;font-size:.95rem}
-.dot{width:9px;height:9px;border-radius:2px;background:var(--ind);transform:rotate(45deg)}
-.tag{font-size:.72rem;color:var(--muted);background:var(--chip);padding:3px 9px;border-radius:999px}
-.spacer{flex:1}
-.metric{display:flex;flex-direction:column;align-items:flex-end;line-height:1.15}
-.metric b{font-size:1.05rem;font-variant-numeric:tabular-nums}
-.metric span{font-size:.62rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
-.metric.good b{color:var(--green)} .metric.ind b{color:var(--ind)}
-.ctx{padding:12px 18px;border-bottom:1px solid var(--line);background:var(--bg);font-size:.82rem;color:var(--muted);display:flex;gap:8px 18px;flex-wrap:wrap;align-items:center}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1140px;margin:0 auto;padding:0 24px 70px}
+.mast{padding:56px 0 30px;border-bottom:1px solid var(--line)}
+.kicker{font-family:var(--mono);font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:var(--wine)}
+h1{font-family:var(--serif);font-weight:500;font-size:clamp(2rem,4.6vw,3.05rem);line-height:1.08;margin:.32em 0 0;letter-spacing:-.012em;text-wrap:balance}
+.lede{font-size:1.14rem;color:var(--muted);max-width:64ch;margin-top:16px;line-height:1.65}
+.lede b{color:var(--ink);font-weight:600}
+.sign{margin-top:20px;display:flex;gap:8px 16px;flex-wrap:wrap;align-items:baseline;font-size:.85rem;color:var(--muted);border-top:1px solid var(--line);padding-top:15px}
+.sign b{color:var(--ink);font-weight:600}
+.sign .il{font-family:var(--hand);font-size:1.15rem;color:var(--wine)}
+.premise{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:26px 0 4px}
+@media(max-width:800px){.premise{grid-template-columns:1fr}}
+.pc{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.pc .l{font-family:var(--mono);font-size:.64rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+.pc .t{font-size:.94rem;line-height:1.5}
+.pc .t em{font-style:normal;color:var(--wine);font-weight:600}
+.console{background:var(--card);border:1px solid var(--line);border-radius:18px;margin-top:30px;overflow:hidden;box-shadow:0 14px 40px -30px rgba(90,50,40,.4)}
+.cbar{display:flex;align-items:center;gap:14px;padding:15px 20px;border-bottom:1px solid var(--line);flex-wrap:wrap;background:var(--paper)}
+.cbar .name{font-family:var(--serif);font-weight:600;font-size:1.02rem;display:flex;align-items:center;gap:9px}
+.seal{width:10px;height:10px;background:var(--wine);transform:rotate(45deg)}
+.pill{font-family:var(--mono);font-size:.66rem;color:var(--muted);background:var(--chip);padding:3px 10px;border-radius:999px;letter-spacing:.03em}
+.grow{flex:1}
+.stat{display:flex;flex-direction:column;align-items:flex-end;line-height:1.1}
+.stat b{font-family:var(--mono);font-size:1.15rem;font-variant-numeric:tabular-nums}
+.stat span{font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-top:2px}
+.stat.g b{color:var(--good)} .stat.w b{color:var(--wine)}
+.ctx{padding:13px 20px;border-bottom:1px solid var(--line);background:var(--card);font-family:var(--mono);font-size:.74rem;color:var(--muted);display:flex;gap:10px 18px;flex-wrap:wrap;align-items:center}
 .ctx b{color:var(--ink)}
-.progress{flex:1;min-width:140px;height:8px;background:var(--chip);border-radius:5px;overflow:hidden}
-.progress i{display:block;height:100%;background:var(--ind)}
-.split{display:grid;grid-template-columns:330px 1fr;min-height:520px}
-@media(max-width:820px){.split{grid-template-columns:1fr}}
-.queue{border-right:1px solid var(--line);overflow-y:auto;max-height:660px}
-.qhead{padding:11px 16px;font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);position:sticky;top:0;background:var(--panel);border-bottom:1px solid var(--hair)}
-.item{padding:12px 16px;border-bottom:1px solid var(--hair);cursor:pointer}
-.item:hover{background:var(--bg)}
-.item.sel{background:var(--ind-soft);box-shadow:inset 3px 0 0 var(--ind)}
-.item .q{font-weight:600;font-size:.87rem}
-.item .row{display:flex;justify-content:space-between;gap:8px;margin-top:4px;align-items:center}
-.tagpill{font-size:.66rem;font-weight:700;padding:2px 8px;border-radius:999px}
-.tagpill.flag{background:var(--red-soft);color:var(--red)}
-.tagpill.review{background:var(--amber-soft);color:var(--amber)}
-.tagpill.reuse{background:var(--ind-soft);color:var(--ind)}
-.tagpill.clean{background:var(--green-soft);color:var(--green)}
-.item .conf{font-size:.72rem;color:var(--muted);font-variant-numeric:tabular-nums}
-.done-b{font-size:.72rem;font-weight:600;margin-top:4px}
-.done-b.ap{color:var(--green)} .done-b.ed{color:var(--ind)} .done-b.re{color:var(--red)}
-.detail{padding:18px 22px;overflow-y:auto;max-height:660px}
-.empty-d{color:var(--muted);padding:60px 20px;text-align:center}
-.q-title{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700}
-.q-text{font-size:1.05rem;margin:5px 0 0;font-weight:600;letter-spacing:-.01em}
-.sect{margin-top:18px;font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}
-.sect span{text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)}
-.answer{margin-top:8px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:13px 15px;font-size:.9rem;line-height:1.6}
-.cite{background:var(--ind-soft);color:var(--ind);border-radius:5px;padding:0 5px;font-size:.82em;font-weight:600;cursor:help}
-.evid{display:flex;flex-direction:column;gap:7px;margin-top:9px}
-.ev{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;font-size:.84rem;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:9px 11px}
-.ev .n{font-weight:700;color:var(--ind);font-size:.8rem}
+.prog{flex:1;min-width:130px;height:8px;background:var(--chip);border-radius:5px;overflow:hidden;border:1px solid var(--line)}
+.prog i{display:block;height:100%;background:var(--wine)}
+.split{display:grid;grid-template-columns:328px 1fr;min-height:540px}
+@media(max-width:800px){.split{grid-template-columns:1fr}}
+.queue{border-right:1px solid var(--line);overflow-y:auto;max-height:680px}
+.qh{padding:12px 18px;font-family:var(--mono);font-size:.64rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);position:sticky;top:0;background:var(--card);border-bottom:1px solid var(--hair);z-index:1}
+.item{padding:13px 18px;border-bottom:1px solid var(--hair);cursor:pointer}
+.item:hover{background:var(--paper)}
+.item.sel{background:var(--wine-soft);box-shadow:inset 3px 0 0 var(--wine)}
+.item .q{font-weight:600;font-size:.88rem;line-height:1.4}
+.item .row{display:flex;justify-content:space-between;gap:8px;margin-top:5px;align-items:center}
+.tp{font-family:var(--mono);font-size:.62rem;font-weight:600;padding:2px 8px;border-radius:999px}
+.tp.flag{background:var(--crit-soft);color:var(--crit)} .tp.review{background:var(--amber-soft);color:var(--amber)} .tp.reuse{background:var(--wine-soft);color:var(--wine)} .tp.clean{background:var(--good-soft);color:var(--good)}
+.item .conf{font-family:var(--mono);font-size:.72rem;color:var(--muted)}
+.db{font-size:.74rem;font-weight:600;margin-top:5px}
+.db.ap{color:var(--good)} .db.ed{color:var(--wine)} .db.re{color:var(--crit)}
+.detail{padding:22px 26px;overflow-y:auto;max-height:680px}
+.empty{color:var(--muted);padding:70px 20px;text-align:center;font-family:var(--serif);font-style:italic;font-size:1.1rem}
+.qt{font-family:var(--mono);font-size:.66rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.qx{font-family:var(--serif);font-size:1.24rem;margin:6px 0 0;font-weight:600;letter-spacing:-.01em;line-height:1.25}
+.sect{margin-top:20px;font-family:var(--mono);font-size:.64rem;text-transform:uppercase;letter-spacing:.1em;color:var(--wine);font-weight:600}
+.sect .n{color:var(--muted);text-transform:none;letter-spacing:0;font-weight:400;font-family:var(--body)}
+.answer{margin-top:9px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px 16px;font-size:.92rem;line-height:1.65}
+.cite{background:var(--wine-soft);color:var(--wine);border-radius:5px;padding:0 5px;font-size:.82em;font-weight:600;font-family:var(--mono);cursor:help}
+.evid{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.ev{display:grid;grid-template-columns:auto 1fr auto;gap:11px;align-items:center;font-size:.86rem;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.ev .n{font-family:var(--mono);font-weight:600;color:var(--wine);font-size:.8rem}
 .ev small{color:var(--muted);display:block}
-.ev .st{font-size:.7rem;font-weight:700;padding:1px 7px;border-radius:999px}
-.ev .st.ok{background:var(--green-soft);color:var(--green)}
-.ev .st.stale{background:var(--amber-soft);color:var(--amber)}
-.rgraph{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;margin-top:9px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:14px 12px}
+.ev .st{font-family:var(--mono);font-size:.62rem;font-weight:600;padding:2px 7px;border-radius:999px}
+.ev .st.ok{background:var(--good-soft);color:var(--good)} .ev .st.stale{background:var(--amber-soft);color:var(--amber)}
+.rgraph{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center;margin-top:10px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px 14px}
 @media(max-width:560px){.rgraph{grid-template-columns:1fr}}
-.rcol{display:flex;flex-direction:column;gap:6px}
-.rnode{font-size:.76rem;background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:6px 9px}
-.rnode.ok{box-shadow:inset 3px 0 0 var(--green)} .rnode.stale{box-shadow:inset 3px 0 0 var(--amber)}
-.rnode.combine{background:var(--ind-soft);border-color:var(--ind);color:var(--ind);font-weight:600;text-align:center;max-width:160px}
+.rcol{display:flex;flex-direction:column;gap:7px}
+.rnode{font-size:.77rem;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:7px 10px}
+.rnode.ok{box-shadow:inset 3px 0 0 var(--good)} .rnode.stale{box-shadow:inset 3px 0 0 var(--amber)}
+.rnode.cb{background:var(--wine-soft);border-color:var(--wine);color:var(--wine);font-weight:600;text-align:center;max-width:170px}
 .rmid{display:flex;justify-content:center;color:var(--muted);font-size:1.3rem}
-.rmid::before{content:"→"}@media(max-width:560px){.rmid::before{content:"↓"}}
-.rconf{font-size:1.7rem;font-weight:700;font-variant-numeric:tabular-nums;text-align:center;border-radius:10px;padding:12px;line-height:1}
-.rconf span{font-size:.68rem;color:var(--muted);font-weight:400;display:block}
-.rconf.flag{background:var(--red-soft);color:var(--red)} .rconf.review{background:var(--amber-soft);color:var(--amber)} .rconf.clean{background:var(--green-soft);color:var(--green)}
-.flagbox{margin-top:9px;background:var(--red-soft);border-radius:10px;padding:11px 13px;font-size:.86rem}
+.rmid::before{content:"\2192"}@media(max-width:560px){.rmid::before{content:"\2193"}}
+.rc{font-family:var(--mono);font-size:1.8rem;font-weight:600;text-align:center;border-radius:12px;padding:13px;line-height:1}
+.rc span{font-size:.64rem;color:var(--muted);font-weight:400;display:block}
+.rc.flag{background:var(--crit-soft);color:var(--crit)} .rc.review{background:var(--amber-soft);color:var(--amber)} .rc.clean{background:var(--good-soft);color:var(--good)}
+.flagbox{margin-top:10px;background:var(--crit-soft);border-radius:12px;padding:12px 14px;font-size:.88rem;line-height:1.55}
 .flagbox.review{background:var(--amber-soft)}
 .flagbox b{color:var(--ink)}
-.verdict{margin-top:9px;font-size:.85rem;background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:10px 12px}
-.actions{display:flex;gap:9px;margin-top:16px;flex-wrap:wrap}
-.btn{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:9px;padding:9px 15px;font-weight:650;font-size:.85rem;cursor:pointer}
+.verdict{margin-top:10px;font-size:.88rem;background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--wine);border-radius:10px;padding:11px 14px;line-height:1.55}
+.acts{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+.btn{font-family:var(--body);border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:9px 16px;font-weight:600;font-size:.86rem;cursor:pointer}
 .btn:hover{border-color:var(--muted)}
-.btn.ap{background:var(--green);border-color:var(--green);color:#fff}
-.btn.ed{background:var(--ind);border-color:var(--ind);color:#fff}
-.btn.re{background:var(--red);border-color:var(--red);color:#fff}
-.note{margin-top:11px;font-size:.76rem;color:var(--muted)}
-.resolved{margin-top:16px;border-radius:10px;padding:12px 14px;font-size:.86rem;background:var(--green-soft)}
-.resolved.ed{background:var(--ind-soft)} .resolved.re{background:var(--red-soft)}
+.btn.ap{background:var(--good);border-color:var(--good);color:#FFF}
+.btn.ed{background:var(--wine);border-color:var(--wine);color:#FFF}
+.btn.re{background:var(--crit);border-color:var(--crit);color:#FFF}
+.note{margin-top:12px;font-size:.78rem;color:var(--muted)}
+.resolved{margin-top:18px;border-radius:12px;padding:13px 15px;font-size:.88rem;background:var(--good-soft)}
+.resolved.ed{background:var(--wine-soft)} .resolved.re{background:var(--crit-soft)}
 .learn{margin-top:8px;font-size:.8rem;color:var(--muted)}
-.learn b{color:var(--ind)}
-.close{margin-top:30px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
-@media(max-width:820px){.close{grid-template-columns:1fr}}
-.close .box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px}
-.close h3{margin:0 0 8px;font-size:1.02rem}
-.close p{margin:0 0 8px;color:var(--muted);font-size:.9rem}
-.foot{margin-top:26px;color:var(--muted);font-size:.75rem;line-height:1.5;border-top:1px solid var(--line);padding-top:16px}
+.learn b{color:var(--wine)}
+.close{margin-top:34px;display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:800px){.close{grid-template-columns:1fr}}
+.box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px}
+.box h3{font-family:var(--serif);font-weight:600;margin:0 0 10px;font-size:1.1rem}
+.box p{margin:0 0 9px;color:var(--muted);font-size:.92rem;line-height:1.6}
+.box p b{color:var(--ink)}
+.foot{margin-top:28px;color:var(--muted);font-size:.76rem;line-height:1.55;border-top:1px solid var(--line);padding-top:18px}
+.foot a{color:var(--wine)}
 </style>
 
 <div class="wrap">
-  <div class="intro">
-    <div class="eyebrow">Concept · Norm Ai · Supervisory AI</div>
-    <h1 class="serif">At Norm, a human's sign-off is the product</h1>
-    <p class="sub">Norm turns regulations into agents that reason explainably, and its DDQ &amp; RFP product drafts answers with <em>Evidence-Based Drafting</em>, reuses prior approved language, and gets sharper through <em>Continuous Learning</em>. But the deliverable a financial-services client pays for is the moment an attorney signs. This is a concept for that sign-off surface — where Supervisory AI hands a drafted answer to a reviewer who must decide, fast, whether it's defensible.</p>
-    <div class="byl">A working concept by <b>Shrutika Rajput</b> · human-in-the-loop &amp; AI-governance UX · shrutikarajput.com · <b>illustrative data</b>, grounded in Norm Ai's public product</div>
+  <div class="mast">
+    <div class="kicker">Concept · Norm Ai · Supervisory AI</div>
+    <h1>At Norm, a human's sign-off is the product</h1>
+    <p class="lede">Norm turns regulations into agents that reason explainably, and its DDQ and RFP product drafts answers with Evidence-Based Drafting, reuses prior approved language, and gets sharper through Continuous Learning. But the deliverable a financial-services client pays for is the moment an attorney signs. This is a concept for that sign-off surface, where Supervisory AI hands a drafted answer to a reviewer who must decide, fast, whether it is defensible.</p>
+    <div class="sign"><span>A working concept by <b>Shrutika Rajput</b></span><span>human in the loop &amp; AI-governance UX</span><span>shrutikarajput.com</span><span class="il">illustrative data throughout</span></div>
     <div class="premise">
-      <div class="pcard"><b>The product's whole thesis</b><span>Compliance answers you can defend. The <em>sign-off</em> is the deliverable — so the reviewer's speed and confidence <em>is</em> the product.</span></div>
-      <div class="pcard"><b>What the agent already does</b><span>Drafts the answer, cites evidence per line, links reusable approved language, flags its own uncertainty.</span></div>
-      <div class="pcard"><b>Where I'd design</b><span>The 30 seconds where an attorney reads the draft, checks the citation, and signs or sends it back — and that decision teaches the agent.</span></div>
+      <div class="pc"><div class="l">The product's whole thesis</div><div class="t">Compliance answers you can defend. The <em>sign-off</em> is the deliverable, so the reviewer's speed and confidence is the product.</div></div>
+      <div class="pc"><div class="l">What the agent already does</div><div class="t">Drafts the answer, cites evidence per line, links reusable approved language, flags its own uncertainty.</div></div>
+      <div class="pc"><div class="l">Where I would design</div><div class="t">The 30 seconds where an attorney reads the draft, checks the citation, and signs or sends it back, and that decision teaches the agent.</div></div>
     </div>
   </div>
 
-  <div class="app">
-    <div class="appbar">
-      <div class="logo"><span class="dot"></span> Supervisory Review · DDQ / RFP</div>
-      <span class="tag">Meridian Capital — Institutional DDQ · illustrative</span>
-      <div class="spacer"></div>
-      <div class="metric good"><b id="mSigned">0</b><span>signed this session</span></div>
-      <div class="metric ind"><b id="mReuse">0</b><span>reused, not rewritten</span></div>
-      <div class="metric"><b id="mOpen">6</b><span>awaiting sign-off</span></div>
+  <div class="console">
+    <div class="cbar">
+      <div class="name"><span class="seal"></span> Supervisory Review · DDQ / RFP</div>
+      <span class="pill">Meridian Capital, Institutional DDQ</span>
+      <div class="grow"></div>
+      <div class="stat g"><b id="mSigned">0</b><span>signed this session</span></div>
+      <div class="stat w"><b id="mReuse">0</b><span>reused, not rewritten</span></div>
+      <div class="stat"><b id="mOpen">6</b><span>awaiting sign-off</span></div>
     </div>
-    <div class="ctx">
-      <span><b>Due diligence questionnaire</b> · 48 questions · agent-drafted</span>
-      <div class="progress"><i id="prog" style="width:0%"></i></div>
-      <span id="ctxN"><b>0</b>/6 in this batch reviewed</span>
-    </div>
+    <div class="ctx"><span><b>Due diligence questionnaire</b> · 48 questions · agent drafted</span><div class="prog"><i id="prog" style="width:0%"></i></div><span id="ctxN"><b>0</b>/6 reviewed</span></div>
     <div class="split">
       <div class="queue" id="queue"></div>
-      <div class="detail" id="detail"><div class="empty-d">Select a drafted answer to review and sign off.</div></div>
+      <div class="detail" id="detail"><div class="empty">Select a drafted answer to review and sign off.</div></div>
     </div>
   </div>
 
   <div class="close">
     <div class="box">
-      <h3 class="serif">Three design decisions in here</h3>
-      <p><b>1. The citation is one click from the claim.</b> Evidence-Based Drafting is only trustworthy if the attorney can verify a line without leaving the answer. Hover a <span class="cite">cite</span> and its source, date, and freshness are right there — the difference between "found" and "re-researched."</p>
-      <p><b>2. Supervisory AI flags its own doubt, legibly.</b> A confidence score isn't enough; the reviewer needs to see <em>why</em> it's unsure — a stale source, a policy that changed, a first-of-kind question with no reusable answer.</p>
+      <h3>Three design decisions in here</h3>
+      <p><b>1. The citation is one click from the claim.</b> Evidence-Based Drafting is only trustworthy if the attorney can verify a line without leaving the answer. Hover a <span class="cite">cite</span> and its source, date, and freshness are right there, the difference between "found" and "re-researched."</p>
+      <p><b>2. Supervisory AI flags its own doubt, legibly.</b> A confidence score is not enough; the reviewer needs to see why it is unsure, a stale source, a policy that changed, a first-of-kind question with no reusable answer.</p>
       <p><b>3. Every sign-off is Continuous Learning.</b> Approve, edit, or reject is labeled data. An edit becomes a reusable answer; a reject retires a stale source. The queue shrinks as the agent learns what this reviewer trusts.</p>
     </div>
     <div class="box">
-      <h3 class="serif">Why I built this</h3>
-      <p>My capstone, Qlarc, is the closest thing to Norm I've shipped: an AI-governance platform that turns the evidence a vendor already has into proof an enterprise buyer can evaluate — frameworks like SR 11-7, DORA, and the EU AI Act, evidence-pack prep cut from 15-20 days to hours, 65% of answers found rather than rewritten. On Swaayata (Innovation Hacks) I built the oversight-and-override surface for an autonomous system; on a CMS regulatory program, an exception-review queue that cut manual errors 25%.</p>
-      <p>The sign-off surface is where all of that meets. I'd want the first conversation to be about how the reviewer's confidence scales as Norm does.</p>
+      <h3>Why I built this</h3>
+      <p>My capstone, Qlarc, is the closest thing to Norm I have shipped: an AI-governance platform that turns the evidence a vendor already has into proof an enterprise buyer can evaluate, frameworks like SR 11-7, DORA, and the EU AI Act, evidence-pack prep cut from 15 to 20 days down to hours, 65 percent of answers found rather than rewritten. On Swaayata, at Innovation Hacks, I built the oversight and override surface for an autonomous system; on a CMS regulatory program, an exception review queue that cut manual errors 25 percent.</p>
+      <p>The sign-off surface is where all of that meets. I would want the first conversation to be about how the reviewer's confidence scales as Norm does.</p>
     </div>
   </div>
 
-  <p class="foot">Made by Shrutika Rajput — shrutikarajput.com. An independent design concept prepared for a conversation with Norm Ai. All questionnaire content and evidence are illustrative; the product patterns (Legal Engineering, Supervisory AI, Evidence-Based Drafting, Reusable Answers, Continuous Learning, financial-services / insurance DDQ &amp; RFP) are drawn from Norm Ai's public materials. Not affiliated with or endorsed by Norm Ai.</p>
+  <p class="foot">Made by Shrutika Rajput · <a href="https://shrutikarajput.com">shrutikarajput.com</a>. An independent design concept prepared for a conversation with Norm Ai. All questionnaire content and evidence are illustrative; the product patterns (Legal Engineering, Supervisory AI, Evidence-Based Drafting, Reusable Answers, Continuous Learning, financial-services and insurance DDQ and RFP) are drawn from Norm Ai's public materials. Not affiliated with or endorsed by Norm Ai.</p>
 </div>
 
 <script>
 const Q=[
- {id:1,q:"Describe your firm's AML/KYC program and how it is tested.",tag:"reuse",conf:94,conflabel:"clean",
-  answer:'The Firm maintains a risk-based AML program under the Bank Secrecy Act <span class="cite" title="31 CFR 1023.210 — verified 2026-06">[BSA §1023.210]</span>, including customer identification, ongoing monitoring, and annual independent testing <span class="cite" title="Firm ISDA policy v9, approved 2026-05">[Policy §4.2]</span>. The 2025 independent test identified no material findings.',
-  evid:[["1","31 CFR 1023.210 — AML program requirement","Verified Jun 2026","ok"],["2","Firm AML Policy v9 §4.2","Approved May 2026","ok"],["3","2025 Independent Test summary","On file","ok"]],
-  combine:"3 fresh sources + prior approved answer",
-  flag:"",flagtype:"",
-  verdict:"High-confidence, fully cited, and 92% matches an answer approved last quarter (Reusable Answers). This is the fast path — read, confirm the citations still hold, sign.",right:"ap"},
- {id:2,q:"Do you use AI/ML in investment decisions, and how is model risk governed?",tag:"review",conf:71,conflabel:"review",
-  answer:'The Firm employs machine-learning signals in a supervised capacity; all models are governed under an SR 11-7 aligned framework <span class="cite" title="SR 11-7 — source flagged STALE, superseded guidance 2026">[SR 11-7]</span> with independent validation and documented override authority. No model executes trades autonomously.',
-  evid:[["1","SR 11-7 model-risk guidance","Source updated 2026 — draft cites prior version","stale"],["2","Firm Model Governance Policy §7","Approved Feb 2026","ok"],["3","Validation log 2026-Q1","On file","ok"]],
+ {id:1,q:"Describe your firm's AML/KYC program and how it is tested.",tag:"reuse",conf:94,cl:"clean",
+  answer:'The Firm maintains a risk-based AML program under the Bank Secrecy Act <span class="cite" title="31 CFR 1023.210, verified 2026-06">[BSA 1023.210]</span>, including customer identification, ongoing monitoring, and annual independent testing <span class="cite" title="Firm policy v9, approved 2026-05">[Policy 4.2]</span>. The 2025 independent test identified no material findings.',
+  evid:[["1","31 CFR 1023.210, AML program requirement","Verified Jun 2026","ok"],["2","Firm AML Policy v9 sec 4.2","Approved May 2026","ok"],["3","2025 Independent Test summary","On file","ok"]],
+  combine:"3 fresh sources + prior approved answer",flag:"",ft:"",
+  verdict:"High confidence, fully cited, and 92 percent matches an answer approved last quarter (Reusable Answers). This is the fast path: read, confirm the citations still hold, sign.",right:"ap"},
+ {id:2,q:"Do you use AI/ML in investment decisions, and how is model risk governed?",tag:"review",conf:71,cl:"review",
+  answer:'The Firm employs machine-learning signals in a supervised capacity; all models are governed under an SR 11-7 aligned framework <span class="cite" title="SR 11-7, flagged STALE: superseded guidance 2026">[SR 11-7]</span> with independent validation and documented override authority. No model executes trades autonomously.',
+  evid:[["1","SR 11-7 model-risk guidance","Updated 2026, draft cites prior version","stale"],["2","Firm Model Governance Policy sec 7","Approved Feb 2026","ok"],["3","Validation log 2026-Q1","On file","ok"]],
   combine:"2 fresh sources + 1 STALE citation",
-  flag:"Supervisory AI flagged this: the SR 11-7 citation points to guidance that was superseded in 2026. The answer's substance is likely fine, but the authority cited is out of date — exactly the kind of thing a regulator catches and a busy reviewer misses.",flagtype:"review",
+  flag:"Supervisory AI flagged this: the SR 11-7 citation points to guidance that was superseded in 2026. The answer's substance is likely fine, but the authority cited is out of date, exactly the kind of thing a regulator catches and a busy reviewer misses.",ft:"review",
   verdict:"Recommend EDIT: keep the answer, swap the stale SR 11-7 citation for the current version, then sign. The edit becomes a corrected reusable answer so no future draft repeats it.",right:"ed"},
- {id:3,q:"Has the firm had any regulatory enforcement actions in the last 5 years?",tag:"flag",conf:52,conflabel:"flag",
+ {id:3,q:"Has the firm had any regulatory enforcement actions in the last 5 years?",tag:"flag",conf:52,cl:"flag",
   answer:'The Firm has had no material regulatory enforcement actions in the past five years.',
-  evid:[["1","Reusable answer from 2024 DDQ","Approved 2024 — 2 years old","stale"],["—","No current regulatory-history attestation attached","Missing","stale"]],
+  evid:[["1","Reusable answer from 2024 DDQ","Approved 2024, 2 years old","stale"],["!","No current regulatory-history attestation attached","Missing","stale"]],
   combine:"reused 2-yr-old answer, no fresh attestation",
-  flag:"Supervisory AI flagged this: this is a material representation reused from a 2024 answer with no current attestation attached. A 'no enforcement actions' claim is high-liability and must be re-attested each cycle — the agent correctly refused to sign it itself.",flagtype:"flag",
-  verdict:"Recommend REJECT back to the deal team for a fresh signed attestation. Do NOT approve a material legal representation on a stale reuse — this is the exact case where the human sign-off is the product.",right:"re"},
- {id:4,q:"Describe your cybersecurity program and incident-response process.",tag:"reuse",conf:90,conflabel:"clean",
-  answer:'The Firm maintains a written information-security program aligned to NIST CSF <span class="cite" title="NIST CSF 2.0 — verified 2026-04">[NIST CSF 2.0]</span> with a documented incident-response plan tested semi-annually <span class="cite" title="IR Plan v6, approved 2026-03">[IR Plan §3]</span>. The most recent tabletop was completed Q1 2026.',
-  evid:[["1","NIST CSF 2.0","Verified Apr 2026","ok"],["2","Firm IR Plan v6 §3","Approved Mar 2026","ok"]],
-  combine:"2 fresh sources + prior approved answer",
-  flag:"",flagtype:"",
-  verdict:"Clean, current, reusable. Sign and move on — this is what the auto-clear path should feel like.",right:"ap"},
- {id:5,q:"What is your approach to ESG integration and related disclosures?",tag:"review",conf:68,conflabel:"review",
-  answer:'The Firm integrates ESG factors into fundamental analysis and discloses methodology consistent with SFDR <span class="cite" title="SFDR — flagged: applies to EU funds only; confirm scope for this client">[SFDR]</span> where applicable.',
-  evid:[["1","SFDR regulation","Scope flag: EU-only","stale"],["2","Firm ESG Policy §2","Approved Jan 2026","ok"]],
+  flag:"Supervisory AI flagged this: this is a material representation reused from a 2024 answer with no current attestation attached. A 'no enforcement actions' claim is high-liability and must be re-attested each cycle, so the agent correctly refused to sign it itself.",ft:"flag",
+  verdict:"Recommend REJECT back to the deal team for a fresh signed attestation. Do not approve a material legal representation on a stale reuse. This is the exact case where the human sign-off is the product.",right:"re"},
+ {id:4,q:"Describe your cybersecurity program and incident-response process.",tag:"reuse",conf:90,cl:"clean",
+  answer:'The Firm maintains a written information-security program aligned to NIST CSF <span class="cite" title="NIST CSF 2.0, verified 2026-04">[NIST CSF 2.0]</span> with a documented incident-response plan tested semi-annually <span class="cite" title="IR Plan v6, approved 2026-03">[IR Plan 3]</span>. The most recent tabletop was completed Q1 2026.',
+  evid:[["1","NIST CSF 2.0","Verified Apr 2026","ok"],["2","Firm IR Plan v6 sec 3","Approved Mar 2026","ok"]],
+  combine:"2 fresh sources + prior approved answer",flag:"",ft:"",
+  verdict:"Clean, current, reusable. Sign and move on. This is what the auto-clear path should feel like.",right:"ap"},
+ {id:5,q:"What is your approach to ESG integration and related disclosures?",tag:"review",conf:68,cl:"review",
+  answer:'The Firm integrates ESG factors into fundamental analysis and discloses methodology consistent with SFDR <span class="cite" title="SFDR, flagged: applies to EU funds only, confirm scope">[SFDR]</span> where applicable.',
+  evid:[["1","SFDR regulation","Scope flag: EU only","stale"],["2","Firm ESG Policy sec 2","Approved Jan 2026","ok"]],
   combine:"jurisdiction-scope uncertainty on 1 source",
-  flag:"Supervisory AI flagged this: SFDR applies to EU funds. If Meridian's mandate is US-only, citing it is either irrelevant or misleading. First-of-kind for this client — no reusable answer exists.",flagtype:"review",
-  verdict:"Recommend EDIT: confirm client jurisdiction, scope the SFDR reference (or remove it), then sign. Save the scoped version as the new reusable answer for this client type.",right:"ed"},
- {id:6,q:"Confirm the firm's Form ADV is current and provide the CRD number.",tag:"clean",conf:97,conflabel:"clean",
-  answer:'The Firm’s Form ADV was last amended March 2026 <span class="cite" title="IARD filing — verified 2026-03">[IARD]</span>; CRD #148-illustrative. Both are current.',
+  flag:"Supervisory AI flagged this: SFDR applies to EU funds. If Meridian's mandate is US only, citing it is either irrelevant or misleading. First-of-kind for this client, no reusable answer exists.",ft:"review",
+  verdict:"Recommend EDIT: confirm client jurisdiction, scope the SFDR reference or remove it, then sign. Save the scoped version as the new reusable answer for this client type.",right:"ed"},
+ {id:6,q:"Confirm the firm's Form ADV is current and provide the CRD number.",tag:"clean",conf:97,cl:"clean",
+  answer:'The Firm\'s Form ADV was last amended March 2026 <span class="cite" title="IARD filing, verified 2026-03">[IARD]</span>; CRD number 148-illustrative. Both are current.',
   evid:[["1","IARD / Form ADV filing","Verified Mar 2026","ok"]],
-  combine:"single authoritative source, verified",
-  flag:"",flagtype:"",
-  verdict:"Factual, single-source, verified against the live filing. Highest-confidence sign in the batch.",right:"ap"}
+  combine:"single authoritative source, verified",flag:"",ft:"",
+  verdict:"Factual, single source, verified against the live filing. Highest-confidence sign in the batch.",right:"ap"}
 ];
-let sel=null, signed=0, reuse=0, reviewed=0;
-const done={};
+let sel=null; const done={};
 const queue=document.getElementById('queue'), detail=document.getElementById('detail');
 function renderQueue(){
   const open=Q.filter(x=>!done[x.id]).length;
   document.getElementById('mOpen').textContent=open;
-  queue.innerHTML='<div class="qhead">Drafted answers · '+open+' awaiting sign-off</div>'+Q.map(x=>{
+  queue.innerHTML='<div class="qh">Drafted answers · '+open+' awaiting sign-off</div>'+Q.map(x=>{
     const r=done[x.id];
-    return '<div class="item '+(sel===x.id?'sel':'')+'" data-i="'+x.id+'" style="'+(r?'opacity:.55':'')+'">'
+    return '<div class="item '+(sel===x.id?'sel':'')+'" data-i="'+x.id+'" style="'+(r?'opacity:.5':'')+'">'
      +'<div class="q">Q'+x.id+'. '+x.q+'</div>'
-     +'<div class="row"><span class="tagpill '+x.tag+'">'+({flag:'material — flagged',review:'needs review',reuse:'reusable match',clean:'clean'})[x.tag]+'</span>'
-     +'<span class="conf">Supervisory AI '+x.conf+'%</span></div>'
-     +(r?'<div class="done-b '+r+'">'+({ap:'✓ signed',ed:'✎ edited + signed',re:'⟲ rejected to deal team'})[r]+'</div>':'')
-     +'</div>';
+     +'<div class="row"><span class="tp '+x.tag+'">'+({flag:'material, flagged',review:'needs review',reuse:'reusable match',clean:'clean'})[x.tag]+'</span><span class="conf">Supervisory AI '+x.conf+'%</span></div>'
+     +(r?'<div class="db '+r+'">'+({ap:'✓ signed',ed:'✎ edited + signed',re:'⟲ rejected to deal team'})[r]+'</div>':'')+'</div>';
   }).join('');
 }
 function renderDetail(x){
-  if(!x){detail.innerHTML='<div class="empty-d">Select a drafted answer to review and sign off.</div>';return;}
+  if(!x){detail.innerHTML='<div class="empty">Select a drafted answer to review and sign off.</div>';return;}
   const r=done[x.id];
-  detail.innerHTML=
-   '<div class="q-title">Question '+x.id+' · '+({flag:'material representation',review:'needs review',reuse:'reusable match',clean:'clean'})[x.tag]+'</div>'
-   +'<p class="q-text">'+x.q+'</p>'
-   +'<div class="sect">Agent-drafted answer <span>— Evidence-Based Drafting, hover a citation</span></div>'
-   +'<div class="answer">'+x.answer+'</div>'
-   +'<div class="sect">Evidence</div><div class="evid">'+x.evid.map(e=>
-      '<div class="ev"><span class="n">'+e[0]+'</span><div>'+e[1]+'<small>'+e[2]+'</small></div>'
-      +'<span class="st '+e[3]+'">'+(e[3]==='ok'?'current':'check')+'</span></div>').join('')+'</div>'
-   +'<div class="sect">Reasoning graph <span>— how Supervisory AI reached its confidence</span></div>'
-   +'<div class="rgraph"><div class="rcol">'+x.evid.map(e=>'<div class="rnode '+e[3]+'">'+e[1].slice(0,30)+'</div>').join('')+'</div>'
-     +'<div class="rmid"></div><div class="rcol"><div class="rnode combine">'+x.combine+'</div>'
-     +'<div class="rconf '+x.conflabel+'" style="margin-top:6px">'+x.conf+'<span>confidence</span></div></div></div>'
-   +(x.flag?'<div class="flagbox '+x.flagtype+'"><b>⚑ Supervisory AI flag</b><br>'+x.flag+'</div>':'')
+  detail.innerHTML='<div class="qt">Question '+x.id+' · '+({flag:'material representation',review:'needs review',reuse:'reusable match',clean:'clean'})[x.tag]+'</div>'
+   +'<p class="qx">'+x.q+'</p>'
+   +'<div class="sect">Agent-drafted answer <span class="n">Evidence-Based Drafting, hover a citation</span></div><div class="answer">'+x.answer+'</div>'
+   +'<div class="sect">Evidence</div><div class="evid">'+x.evid.map(e=>'<div class="ev"><span class="n">'+e[0]+'</span><div>'+e[1]+'<small>'+e[2]+'</small></div><span class="st '+e[3]+'">'+(e[3]==='ok'?'current':'check')+'</span></div>').join('')+'</div>'
+   +'<div class="sect">Reasoning graph <span class="n">how Supervisory AI reached its confidence</span></div>'
+   +'<div class="rgraph"><div class="rcol">'+x.evid.map(e=>'<div class="rnode '+e[3]+'">'+e[1].slice(0,30)+'</div>').join('')+'</div><div class="rmid"></div><div class="rcol"><div class="rnode cb">'+x.combine+'</div><div class="rc '+x.cl+'" style="margin-top:7px">'+x.conf+'<span>confidence</span></div></div></div>'
+   +(x.flag?'<div class="flagbox '+x.ft+'"><b>⚑ Supervisory AI flag</b><br>'+x.flag+'</div>':'')
    +'<div class="sect">Recommended sign-off</div><div class="verdict">'+x.verdict+'</div>'
-   +(r? '<div class="resolved '+(r==='ap'?'':r)+'">'+({ap:'✓ Signed and returned to the questionnaire.',ed:'✎ Edited, signed, and saved as a corrected reusable answer.',re:'⟲ Rejected to the deal team with the flag reason — not signed.'})[r]
-        +'<div class="learn"><b>Continuous Learning:</b> '+({ap:'this reviewer trusts this source pattern — confidence to auto-suggest rises.',ed:'the corrected citation becomes the new reusable answer; future drafts inherit it.',re:'the stale reuse is retired so no future draft re-uses it.'})[r]+'</div>'
-        +'<button class="btn" data-undo="'+x.id+'" style="margin-top:10px">Undo</button></div>'
-      : '<div class="actions"><button class="btn ap" data-act="ap" data-id="'+x.id+'">Sign</button>'
-        +'<button class="btn ed" data-act="ed" data-id="'+x.id+'">Edit + sign</button>'
-        +'<button class="btn re" data-act="re" data-id="'+x.id+'">Reject to deal team</button></div>'
-        +'<div class="note">The attorney decides — Supervisory AI recommends, it never signs a material representation itself. Every call feeds Continuous Learning.</div>');
+   +(r?'<div class="resolved '+(r==='ap'?'':r)+'">'+({ap:'✓ Signed and returned to the questionnaire.',ed:'✎ Edited, signed, and saved as a corrected reusable answer.',re:'⟲ Rejected to the deal team with the flag reason, not signed.'})[r]
+       +'<div class="learn"><b>Continuous Learning:</b> '+({ap:'this reviewer trusts this source pattern, confidence to auto-suggest rises.',ed:'the corrected citation becomes the new reusable answer; future drafts inherit it.',re:'the stale reuse is retired so no future draft re-uses it.'})[r]+'</div>'
+       +'<button class="btn" data-undo="'+x.id+'" style="margin-top:10px">Undo</button></div>'
+     :'<div class="acts"><button class="btn ap" data-act="ap" data-id="'+x.id+'">Sign</button><button class="btn ed" data-act="ed" data-id="'+x.id+'">Edit + sign</button><button class="btn re" data-act="re" data-id="'+x.id+'">Reject to deal team</button></div><div class="note">The attorney decides. Supervisory AI recommends, it never signs a material representation itself. Every call feeds Continuous Learning.</div>');
 }
 function tally(){
-  signed=Object.values(done).filter(v=>v==='ap'||v==='ed').length;
-  reuse=Q.filter(x=>done[x.id] && x.tag==='reuse').length + Object.entries(done).filter(([id,v])=>v==='ed').length;
-  reviewed=Object.keys(done).length;
+  const signed=Object.values(done).filter(v=>v==='ap'||v==='ed').length;
+  const reuse=Q.filter(x=>done[x.id]&&x.tag==='reuse').length+Object.values(done).filter(v=>v==='ed').length;
+  const rev=Object.keys(done).length;
   document.getElementById('mSigned').textContent=signed;
   document.getElementById('mReuse').textContent=reuse;
-  document.getElementById('prog').style.width=Math.round(reviewed/Q.length*100)+'%';
-  document.getElementById('ctxN').innerHTML='<b>'+reviewed+'</b>/6 in this batch reviewed';
+  document.getElementById('prog').style.width=Math.round(rev/Q.length*100)+'%';
+  document.getElementById('ctxN').innerHTML='<b>'+rev+'</b>/6 reviewed';
 }
 document.addEventListener('click',e=>{
-  const it=e.target.closest('[data-i]');
-  if(it){sel=+it.dataset.i;renderQueue();renderDetail(Q.find(x=>x.id===sel));return;}
-  const a=e.target.closest('[data-act]');
-  if(a){done[+a.dataset.id]=a.dataset.act;tally();renderQueue();renderDetail(Q.find(x=>x.id===+a.dataset.id));return;}
-  const u=e.target.closest('[data-undo]');
-  if(u){delete done[+u.dataset.undo];tally();renderQueue();renderDetail(Q.find(x=>x.id===+u.dataset.undo));return;}
+  const it=e.target.closest('[data-i]'); if(it){sel=+it.dataset.i;renderQueue();renderDetail(Q.find(x=>x.id===sel));return;}
+  const a=e.target.closest('[data-act]'); if(a){done[+a.dataset.id]=a.dataset.act;tally();renderQueue();renderDetail(Q.find(x=>x.id===+a.dataset.id));return;}
+  const u=e.target.closest('[data-undo]'); if(u){delete done[+u.dataset.undo];tally();renderQueue();renderDetail(Q.find(x=>x.id===+u.dataset.undo));return;}
 });
 renderQueue();tally();
 </script>
