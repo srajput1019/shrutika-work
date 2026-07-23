@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Basis · RevOps — First-Pass Approval, the renewal signal</title>
+<style>
+  /* ---------- Theme tokens ---------- */
+  :root{
+    --paper:#F6F4EC; --surface:#FFFFFF; --surface-2:#FBFAF5;
+    --ink:#1B1E1A; --muted:#6C7069; --faint:#9A9E95;
+    --line:#E6E2D6; --line-strong:#D6D1C2;
+    --accent:#0E7C5A; --accent-soft:rgba(14,124,90,.10);
+    --safe:#0E7C5A; --steady:#2E7D63; --watch:#B77514; --risk:#B23B3B;
+    --safe-bg:rgba(14,124,90,.12); --watch-bg:rgba(183,117,20,.14); --risk-bg:rgba(178,59,59,.12);
+    --shadow:0 1px 0 rgba(27,30,26,.03), 0 12px 30px -18px rgba(27,30,26,.22);
+    --radius:14px;
+  }
+  [data-theme="dark"]{
+    --paper:#0F1210; --surface:#161A16; --surface-2:#12150F;
+    --ink:#ECEBE2; --muted:#9BA096; --faint:#666B60;
+    --line:#282D26; --line-strong:#343A31;
+    --accent:#34C08A; --accent-soft:rgba(52,192,138,.14);
+    --safe:#34C08A; --steady:#57C79E; --watch:#E0A34A; --risk:#E06A6A;
+    --safe-bg:rgba(52,192,138,.14); --watch-bg:rgba(224,163,74,.14); --risk-bg:rgba(224,106,106,.14);
+    --shadow:0 1px 0 rgba(0,0,0,.3), 0 18px 40px -22px rgba(0,0,0,.7);
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+    font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased;
+    transition:background .35s ease,color .35s ease;
+  }
+  .wrap{max-width:1240px; margin:0 auto; padding:26px 24px 40px}
+  .num{font-variant-numeric:tabular-nums lining-nums; font-feature-settings:"tnum" 1}
+  .serif{font-family:ui-serif,Georgia,"Iowan Old Style","Times New Roman",serif}
+
+  /* ---------- Masthead ---------- */
+  .mast{display:flex; align-items:flex-start; justify-content:space-between; gap:20px; flex-wrap:wrap}
+  .brand{display:flex; align-items:center; gap:12px}
+  .logo{width:30px; height:30px; flex:0 0 auto}
+  .brand .bt{font-weight:650; letter-spacing:-.01em; font-size:15px}
+  .brand .env{font-size:11px; color:var(--muted); letter-spacing:.08em; text-transform:uppercase}
+  .kicker{color:var(--accent); font-weight:650; letter-spacing:.12em; text-transform:uppercase; font-size:11px; margin:22px 0 8px}
+  h1.title{font-size:30px; line-height:1.12; letter-spacing:-.02em; margin:0 0 10px; font-weight:600; max-width:22ch}
+  .lede{color:var(--muted); max-width:70ch; font-size:14.5px; margin:0}
+  .lede b{color:var(--ink); font-weight:600}
+
+  .controls{display:flex; gap:8px; align-items:center}
+  .seg{display:inline-flex; background:var(--surface-2); border:1px solid var(--line); border-radius:10px; padding:3px}
+  .seg button{border:0; background:transparent; color:var(--muted); font:inherit; font-size:12.5px; font-weight:550;
+    padding:6px 12px; border-radius:7px; cursor:pointer; transition:.18s}
+  .seg button[aria-pressed="true"]{background:var(--surface); color:var(--ink); box-shadow:0 1px 2px rgba(0,0,0,.10)}
+  [data-theme="dark"] .seg button[aria-pressed="true"]{background:#20261F}
+  .icon-btn{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--surface-2);
+    color:var(--ink);cursor:pointer;display:grid;place-items:center;transition:.18s}
+  .icon-btn:hover{border-color:var(--line-strong)}
+
+  /* ---------- KPI strip ---------- */
+  .kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:22px 0 6px}
+  .kpi{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:14px 16px; box-shadow:var(--shadow)}
+  .kpi .v{font-size:22px; font-weight:650; letter-spacing:-.02em}
+  .kpi .l{color:var(--muted); font-size:12px; margin-top:2px}
+  .kpi .src{color:var(--faint); font-size:10.5px; margin-top:7px; letter-spacing:.02em}
+  .tag{display:inline-block; font-size:9.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+    padding:2px 6px; border-radius:5px; vertical-align:middle}
+  .tag.real{background:var(--accent-soft); color:var(--accent)}
+  .tag.illus{background:var(--surface-2); color:var(--faint); border:1px solid var(--line)}
+
+  /* ---------- Main grid ---------- */
+  .board{display:grid; grid-template-columns:280px minmax(0,1fr) 316px; gap:16px; margin-top:18px}
+  .card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow)}
+  .card .hd{padding:14px 16px 10px; border-bottom:1px solid var(--line)}
+  .card .hd h2{margin:0; font-size:12.5px; font-weight:650; letter-spacing:.04em; text-transform:uppercase; color:var(--muted)}
+  .card .hd .sub{color:var(--faint); font-size:11.5px; margin-top:3px}
+  .card .bd{padding:12px 14px}
+
+  /* ---------- Portfolio list ---------- */
+  .firm{width:100%; text-align:left; background:transparent; border:1px solid transparent; border-radius:10px;
+    padding:10px 10px; cursor:pointer; display:block; transition:.15s; margin-bottom:2px}
+  .firm:hover{background:var(--surface-2)}
+  .firm[aria-selected="true"]{background:var(--surface-2); border-color:var(--line-strong)}
+  .firm-top{display:flex; align-items:center; justify-content:space-between; gap:8px}
+  .firm-name{font-weight:600; font-size:13.5px; letter-spacing:-.01em}
+  .firm-meta{color:var(--faint); font-size:11px; margin-top:1px}
+  .firm-bottom{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:8px}
+  .spark{width:66px; height:22px; flex:0 0 auto}
+  .fp{display:flex; align-items:baseline; gap:5px}
+  .fp .val{font-size:16px; font-weight:650; letter-spacing:-.02em}
+  .fp .u{font-size:10.5px; color:var(--muted)}
+  .trend{font-size:11px; font-weight:650; display:inline-flex; align-items:center; gap:2px}
+  .badge{font-size:10px; font-weight:700; letter-spacing:.03em; padding:3px 8px; border-radius:999px; white-space:nowrap}
+  .b-exp{background:var(--safe-bg); color:var(--safe)}
+  .b-safe{background:var(--accent-soft); color:var(--steady)}
+  .b-watch{background:var(--watch-bg); color:var(--watch)}
+  .b-risk{background:var(--risk-bg); color:var(--risk)}
+  .up{color:var(--safe)} .down{color:var(--risk)} .flatc{color:var(--muted)}
+
+  /* ---------- Chart ---------- */
+  .chart-head{display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap}
+  .chart-title{font-size:16px; font-weight:650; letter-spacing:-.01em}
+  .chart-sub{color:var(--muted); font-size:12px}
+  svg.chart{display:block; width:100%; height:auto; touch-action:none; cursor:crosshair}
+  .legend{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px}
+  .lg{display:inline-flex; align-items:center; gap:6px; font-size:11.5px; color:var(--muted);
+    border:1px solid var(--line); background:var(--surface-2); padding:4px 9px; border-radius:999px; cursor:pointer; transition:.15s}
+  .lg:hover{border-color:var(--line-strong)}
+  .lg[aria-pressed="false"]{opacity:.4}
+  .lg .dot{width:9px; height:9px; border-radius:50%}
+  .lg.area-sel{cursor:pointer}
+  .lg.area-sel[aria-pressed="true"]{color:var(--ink); border-color:var(--line-strong); background:var(--surface)}
+
+  .scrub{margin-top:14px}
+  .scrub-row{display:flex; align-items:center; gap:12px}
+  input[type=range]{-webkit-appearance:none; appearance:none; width:100%; height:4px; border-radius:999px;
+    background:var(--line-strong); outline:none; cursor:pointer}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; appearance:none; width:18px; height:18px; border-radius:50%;
+    background:var(--surface); border:2px solid var(--accent); box-shadow:0 1px 4px rgba(0,0,0,.25); cursor:grab}
+  input[type=range]::-moz-range-thumb{width:18px; height:18px; border-radius:50%; background:var(--surface);
+    border:2px solid var(--accent); cursor:grab}
+  .scrub-label{font-size:12px; color:var(--muted); white-space:nowrap; min-width:150px; text-align:right}
+  .scrub-label b{color:var(--ink); font-weight:650}
+
+  /* readout table */
+  table.ro{width:100%; border-collapse:collapse; margin-top:14px; font-size:12.5px}
+  table.ro th{text-align:left; color:var(--faint); font-weight:600; font-size:10.5px; letter-spacing:.05em;
+    text-transform:uppercase; padding:6px 8px; border-bottom:1px solid var(--line)}
+  table.ro th.r,table.ro td.r{text-align:right}
+  table.ro td{padding:8px 8px; border-bottom:1px solid var(--line)}
+  table.ro tr:last-child td{border-bottom:0}
+  .swatch{display:inline-block; width:8px; height:8px; border-radius:2px; margin-right:7px; vertical-align:middle}
+  .tot td{font-weight:650; border-top:1px solid var(--line-strong)}
+
+  /* ---------- Signal panel ---------- */
+  .verdict{padding:16px 16px 6px}
+  .v-head{display:flex; align-items:center; gap:10px}
+  .v-pill{font-size:11px; font-weight:700; letter-spacing:.04em; padding:5px 11px; border-radius:999px}
+  .v-firm{font-weight:650; font-size:15px; letter-spacing:-.01em}
+  .v-firm .m{color:var(--muted); font-weight:500; font-size:12px}
+  .v-metrics{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:14px 0 4px}
+  .vm{background:var(--surface-2); border:1px solid var(--line); border-radius:10px; padding:10px 12px}
+  .vm .v{font-size:19px; font-weight:650; letter-spacing:-.02em}
+  .vm .l{font-size:11px; color:var(--muted); margin-top:1px}
+  .action{padding:14px 16px; border-top:1px solid var(--line); margin-top:12px}
+  .action .h{font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); margin-bottom:6px}
+  .action p{margin:0; font-size:13px; line-height:1.55}
+  .action .who{display:inline-block; margin-top:9px; font-size:11px; color:var(--muted);
+    border:1px solid var(--line); border-radius:999px; padding:3px 9px}
+
+  .rework{padding:14px 16px; border-top:1px solid var(--line)}
+  .rework .h{font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); margin-bottom:2px}
+  .rework .cap{font-size:11px; color:var(--muted); margin-bottom:11px}
+  .rw{margin-bottom:10px}
+  .rw-top{display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px}
+  .rw-top .c{color:var(--muted)}
+  .rw-bar{height:7px; background:var(--surface-2); border-radius:999px; overflow:hidden; border:1px solid var(--line)}
+  .rw-fill{height:100%; border-radius:999px; background:var(--risk); opacity:.85}
+
+  /* threshold control */
+  .thresh{display:flex; align-items:center; gap:12px; margin-top:16px; padding:12px 14px;
+    background:var(--surface); border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow)}
+  .thresh .lab{font-size:12px; color:var(--muted); white-space:nowrap}
+  .thresh .lab b{color:var(--ink); font-weight:650}
+  .thresh input{max-width:340px}
+
+  /* ---------- Footer / notes ---------- */
+  .note{margin-top:18px; background:var(--surface-2); border:1px solid var(--line); border-left:3px solid var(--accent);
+    border-radius:12px; padding:14px 18px; color:var(--muted); font-size:12.5px; line-height:1.6}
+  .note b{color:var(--ink); font-weight:600}
+  footer{margin-top:22px; padding-top:16px; border-top:1px solid var(--line); display:flex; justify-content:space-between;
+    align-items:center; gap:14px; flex-wrap:wrap}
+  footer .made{font-size:13px}
+  footer .made a{color:var(--accent); text-decoration:none; font-weight:600}
+  footer .made a:hover{text-decoration:underline}
+  footer .method{font-size:11.5px; color:var(--faint); max-width:56ch; text-align:right}
+
+  /* ---------- responsive ---------- */
+  @media (max-width:1080px){
+    .board{grid-template-columns:1fr 1fr; grid-template-areas:"port sig" "chart chart"}
+    #panelPortfolio{grid-area:port} #panelSignal{grid-area:sig} #panelChart{grid-area:chart}
+  }
+  @media (max-width:760px){
+    .kpis{grid-template-columns:1fr 1fr}
+    .board{grid-template-columns:1fr; grid-template-areas:"chart" "sig" "port"}
+    h1.title{font-size:24px}
+    footer .method{text-align:left}
+    .scrub-label{min-width:0}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Masthead -->
+  <div class="mast">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <rect x="1" y="1" width="30" height="30" rx="8" fill="var(--accent)"/>
+        <rect x="8"  y="17" width="4" height="7" rx="1.4" fill="#fff"/>
+        <rect x="14" y="12" width="4" height="12" rx="1.4" fill="#fff"/>
+        <rect x="20" y="8"  width="4" height="16" rx="1.4" fill="#fff" opacity=".72"/>
+      </svg>
+      <div>
+        <div class="bt">Basis</div>
+        <div class="env">RevOps · Renewal Intelligence</div>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="seg" role="tablist" aria-label="View">
+        <button id="viewFirm"  aria-pressed="true"  onclick="setView('firm')">By firm</button>
+        <button id="viewArea"  aria-pressed="false" onclick="setView('area')">By practice area</button>
+      </div>
+      <button class="icon-btn" id="themeBtn" onclick="toggleTheme()" title="Toggle light / dark" aria-label="Toggle theme">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="kicker">Revenue Operations · the leading indicator</div>
+  <h1 class="title">First-pass approval is the signal that predicts a Basis renewal.</h1>
+  <p class="lede">Basis renews on evidence, workflow by workflow — an accountant only keeps a Basis agent if they still
+    trust its output enough to <b>just review it</b>. So the renewal question is never "are they logging in." It's
+    <b>what share of agent outputs get approved on first review</b> versus sent back for rework — per firm, per practice
+    area, tracked over time. A climbing curve is a safe renewal and an expansion target; a falling one is a churn flag
+    weeks before the renewal call. This is that signal, made operable for a first RevOps hire.</p>
+
+  <!-- KPI strip: REAL published Basis numbers -->
+  <div class="kpis">
+    <div class="kpi">
+      <div class="v num">30%</div>
+      <div class="l">avg. time saved per firm <span class="tag real">Basis published</span></div>
+      <div class="src">Firms shift staff from doing the work to reviewing it.</div>
+    </div>
+    <div class="kpi">
+      <div class="v num">~30%</div>
+      <div class="l">of the top 25 U.S. firms on Basis <span class="tag real">Basis published</span></div>
+      <div class="src">CAS · Tax · Audit · Advisory, end-to-end for review.</div>
+    </div>
+    <div class="kpi">
+      <div class="v num">$1.15B</div>
+      <div class="l">valuation, $100M Series B <span class="tag real">Feb 2026</span></div>
+      <div class="src">Accel, GV, Khosla — $138M raised to date.</div>
+    </div>
+    <div class="kpi">
+      <div class="v num" id="kpiPortfolio">—</div>
+      <div class="l">portfolio first-pass, this week <span class="tag illus">illustrative</span></div>
+      <div class="src" id="kpiPortfolioSub">Across 8 named accounts on Basis.</div>
+    </div>
+  </div>
+
+  <!-- Board -->
+  <div class="board">
+
+    <!-- Portfolio -->
+    <section class="card" id="panelPortfolio">
+      <div class="hd">
+        <h2 id="portHd">Portfolio</h2>
+        <div class="sub" id="portSub">Firm · live practice areas · first-pass</div>
+      </div>
+      <div class="bd" id="portList"></div>
+    </section>
+
+    <!-- Chart -->
+    <section class="card" id="panelChart">
+      <div class="hd">
+        <div class="chart-head">
+          <div>
+            <div class="chart-title" id="chartTitle">—</div>
+            <div class="chart-sub" id="chartSub">First-pass approval rate · 12-week window</div>
+          </div>
+        </div>
+      </div>
+      <div class="bd">
+        <svg class="chart" id="chart" viewBox="0 0 780 380" preserveAspectRatio="xMidYMid meet" role="img" aria-label="First-pass approval over 12 weeks"></svg>
+        <div class="legend" id="legend"></div>
+
+        <div class="scrub">
+          <div class="scrub-row">
+            <input type="range" id="week" min="1" max="12" step="1" value="12" aria-label="As-of week" />
+            <div class="scrub-label">As of <b id="weekLabel">Week of Jul 20</b></div>
+          </div>
+        </div>
+
+        <table class="ro" id="readout"></table>
+      </div>
+    </section>
+
+    <!-- Signal -->
+    <section class="card" id="panelSignal">
+      <div class="verdict">
+        <div class="v-head">
+          <span class="v-pill" id="vPill">—</span>
+        </div>
+        <div class="v-firm" id="vFirm" style="margin-top:10px">—</div>
+        <div class="v-metrics">
+          <div class="vm"><div class="v num" id="vLevel">—</div><div class="l">first-pass, as of week</div></div>
+          <div class="vm"><div class="v num" id="vSlope">—</div><div class="l">6-week trend</div></div>
+          <div class="vm"><div class="v num" id="vRenew">—</div><div class="l">weeks to renewal</div></div>
+          <div class="vm"><div class="v num" id="vReviewed">—</div><div class="l">outputs reviewed / wk</div></div>
+        </div>
+      </div>
+      <div class="action">
+        <div class="h">Recommended RevOps action</div>
+        <p id="actionText">—</p>
+        <span class="who" id="actionWho">—</span>
+      </div>
+      <div class="rework" id="reworkBox">
+        <div class="h">Why outputs came back</div>
+        <div class="cap" id="reworkCap">Rework reasons — each captured as a training signal.</div>
+        <div id="reworkList"></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Threshold control -->
+  <div class="thresh">
+    <span class="lab">Renewal-safe line: <b><span id="threshVal">85</span>% first-pass</b></span>
+    <input type="range" id="thresh" min="70" max="95" step="1" value="85" aria-label="Renewal-safe threshold" />
+    <span class="lab" id="threshCount">—</span>
+  </div>
+
+  <div class="note">
+    <b>Why not a generic pipeline metric?</b> Seats, logins and ARR tell you a firm bought Basis — not whether they still
+    trust it. Because Basis delivers finished work "ready for review," the honest leading indicator is whether the reviewer
+    keeps accepting that work. First-pass approval turns Basis's own review loop into a renewal forecast, and isolates
+    <b>which practice area</b> is drifting — so the save play (or the expansion motion) starts weeks before the renewal call,
+    not on it. Newest practice areas (Audit here) run lowest first-pass — that's exactly where expansion revenue, and risk, concentrate.
+  </div>
+
+  <footer>
+    <div class="made">Made by <a href="https://shrutikarajput.com" target="_blank" rel="noopener">Shrutika Rajput — shrutikarajput.com</a></div>
+    <div class="method">
+      Firm-level series are an illustrative model; Basis's published figures (30% time saved, ~30% of the top-25, $1.15B)
+      are labelled. Method mirrors Swaayata (instrumenting the moment trust converts) and the Innovation&nbsp;Hacks HITL
+      console (every override captured as a signal).
+    </div>
+  </footer>
+</div>
+
+<script>
+/* ============================================================
+   Basis · RevOps — First-Pass Approval tracker
+   Grounded in Basis's real product: agents run CAS / Tax / Audit
+   / Advisory work end-to-end; an accountant reviews the output and
+   either approves it on first pass or sends it back for rework.
+   Firm-level time series below are an illustrative model.
+   ============================================================ */
+
+/* ---- deterministic pseudo-random so curves look designed, not noisy ---- */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+const AREA_ORDER = ['CAS','Tax','Audit','Advisory'];
+const AREA_LABEL = {CAS:'Client Accounting (CAS)', Tax:'Tax', Audit:'Audit', Advisory:'Advisory'};
+const AREA_SHORT = {CAS:'CAS', Tax:'Tax', Audit:'Audit', Advisory:'Advisory'};
+const AREA_WEIGHT = {CAS:0.45, Tax:0.30, Audit:0.15, Advisory:0.10};
+
+/* rework reasons grounded in the real workflows Basis automates in each area */
+const REWORK = {
+  CAS:      [['Uncategorized transaction',0.34],['Unreconciled bank item',0.28],['Missing receipt / support',0.22],['Intercompany mismatch',0.16]],
+  Tax:      [['Incorrect tax treatment',0.31],['Missing K-1 / 1099 data',0.27],['Prior-year variance unexplained',0.24],['Jurisdiction / nexus flag',0.18]],
+  Audit:    [['Tie-out mismatch',0.33],['Sampling support insufficient',0.27],['Workpaper reference missing',0.22],['Control exception unresolved',0.18]],
+  Advisory: [['Assumption needs client input',0.38],['Variance narrative thin',0.34],['Scenario out of modeled range',0.28]]
+};
+
+const WEEK_DATES = ['May 4','May 11','May 18','May 25','Jun 1','Jun 8','Jun 15','Jun 22','Jun 29','Jul 6','Jul 13','Jul 20'];
+
+/* Real Basis customer firms. Trajectories are an illustrative model tuned to
+   tell realistic, varied renewal stories (expand / hold / watch / churn). */
+const FIRM_DEFS = [
+  {id:'bpb',  name:'Berkowitz Pollack Brant', short:'BPB',  hq:'Miami, FL',      vol:640, renew:9,
+    areas:{CAS:{s:88,k:0.7,v:1.6}, Tax:{s:83,k:0.6,v:1.8}, Advisory:{s:79,k:1.0,v:2.2}}},
+  {id:'boul', name:'Boulay',                  short:'Boulay',hq:'Minneapolis, MN',vol:380, renew:12,
+    areas:{CAS:{s:90,k:0.1,v:1.4}, Tax:{s:88,k:0.0,v:1.5}}},
+  {id:'cn',   name:'Clark Nuber',             short:'Clark Nuber',hq:'Bellevue, WA',vol:520, renew:7,
+    areas:{CAS:{s:91,k:0.2,v:1.2}, Tax:{s:86,k:0.3,v:1.6}, Audit:{s:71,k:1.2,v:2.4}}},
+  {id:'mn',   name:'MarksNelson',             short:'MarksNelson',hq:'Kansas City, MO',vol:300, renew:4,
+    areas:{CAS:{s:86,k:-0.2,v:1.6}, Tax:{s:84,k:-1.4,v:2.0}}},
+  {id:'pin',  name:'Pinion',                  short:'Pinion',hq:'Denver, CO',    vol:340, renew:10,
+    areas:{CAS:{s:85,k:0.7,v:1.7}, Advisory:{s:77,k:1.1,v:2.3}}},
+  {id:'uhy',  name:'UHY',                      short:'UHY',   hq:'Farmington Hills, MI',vol:980, renew:6,
+    areas:{CAS:{s:92,k:0.15,v:1.1}, Tax:{s:87,k:0.1,v:1.5}, Audit:{s:74,k:0.6,v:2.2}, Advisory:{s:82,k:0.4,v:1.8}}},
+  {id:'wg',   name:'WilkinGuttenplan',        short:'WilkinGuttenplan',hq:'East Brunswick, NJ',vol:260, renew:5,
+    areas:{CAS:{s:85,k:0.1,v:1.5}, Tax:{s:83,k:-0.5,v:1.9}}},
+  {id:'wiss', name:'Wiss',                     short:'Wiss',  hq:'Florham Park, NJ',vol:460, renew:8,
+    areas:{CAS:{s:88,k:0.9,v:1.5}, Tax:{s:84,k:0.7,v:1.7}, Advisory:{s:81,k:0.9,v:2.0}}}
+];
+
+/* build the 12-week series + weekly review volumes for every firm/area */
+const FIRMS = FIRM_DEFS.map((f,fi)=>{
+  const liveAreas = AREA_ORDER.filter(a=>f.areas[a]);
+  const wsum = liveAreas.reduce((s,a)=>s+AREA_WEIGHT[a],0);
+  const series = {}, volume = {};
+  liveAreas.forEach((a,ai)=>{
+    const cfg=f.areas[a], rnd=mulberry32((fi+1)*97+(ai+1)*131);
+    const arr=[], vol=[];
+    for(let w=0;w<12;w++){
+      let val=cfg.s+cfg.k*w+(rnd()-0.5)*cfg.v*2;
+      val=Math.max(58,Math.min(98,val));
+      arr.push(Math.round(val*10)/10);
+      const share=AREA_WEIGHT[a]/wsum;
+      vol.push(Math.round(f.vol*share*(0.9+rnd()*0.2)));
+    }
+    series[a]=arr; volume[a]=vol;
+  });
+  return {...f, liveAreas, series, volume};
+});
+
+/* categorical palette for firms in "by practice area" view */
+const FIRM_COLORS = ['#0E7C5A','#2E5AAC','#C0761E','#7A4FBF','#1E9E8A','#B23B3B','#5A6B2E','#A0468A'];
+const FIRM_COLORS_DARK = ['#34C08A','#6E9BFF','#E0A34A','#B08CF0','#4FC7B4','#E06A6A','#9DB65A','#D77FC0'];
+
+function palette(){
+  const dark = document.documentElement.getAttribute('data-theme')==='dark';
+  return dark ? {
+    cas:'#34C08A', Tax:'#6E9BFF', Audit:'#E0A34A', Advisory:'#B08CF0',
+    grid:'#282D26', axis:'#4A4F48', mut:'#9BA096', ink:'#ECEBE2',
+    safe:'#34C08A', watch:'#E0A34A', risk:'#E06A6A', wash:'rgba(52,192,138,.09)',
+    area:{CAS:'#34C08A',Tax:'#6E9BFF',Audit:'#E0A34A',Advisory:'#B08CF0'},
+    firmColors:FIRM_COLORS_DARK, surface:'#161A16'
+  } : {
+    grid:'#E6E2D6', axis:'#C7C2B2', mut:'#6C7069', ink:'#1B1E1A',
+    safe:'#0E7C5A', watch:'#B77514', risk:'#B23B3B', wash:'rgba(14,124,90,.06)',
+    area:{CAS:'#0E7C5A',Tax:'#2E5AAC',Audit:'#C0761E',Advisory:'#7A4FBF'},
+    firmColors:FIRM_COLORS, surface:'#FFFFFF'
+  };
+}
+
+/* ---------------- state ---------------- */
+const state = {
+  view:'firm',
+  firm:'wiss',          // default: an expansion story
+  area:'CAS',           // for by-area view
+  week:12,
+  threshold:85,
+  hidden:new Set()      // hidden practice-area lines in firm view
+};
+
+/* ---------------- helpers ---------------- */
+const val = (arr,w)=>arr[w-1];
+const fmt = n=>n.toLocaleString('en-US');
+function slope6(arr,w){ const start=Math.max(1,w-5); if(w===start) return 0; return (arr[w-1]-arr[start-1])/(w-start); }
+function weightedLevel(firm,w){
+  let num=0,den=0; firm.liveAreas.forEach(a=>{const v=firm.volume[a][w-1]; num+=firm.series[a][w-1]*v; den+=v;});
+  return den? num/den : 0;
+}
+function firmAvgSeries(firm){
+  const out=[]; for(let w=1;w<=12;w++) out.push(weightedLevel(firm,w)); return out;
+}
+function firmReviewedAt(firm,w){ return firm.liveAreas.reduce((s,a)=>s+firm.volume[a][w-1],0); }
+
+/* geometry */
+const P={W:780,H:380,l:50,r:96,t:22,b:46,ymin:60,ymax:100};
+const px=w=> P.l + (w-1)/11*(P.W-P.l-P.r);
+const py=v=> P.t + (1-(v-P.ymin)/(P.ymax-P.ymin))*(P.H-P.t-P.b);
+
+/* ---------------- classification ---------------- */
+function classifyFirm(firm,w,th){
+  const areas = firm.liveAreas.map(a=>({a, level:val(firm.series[a],w), slope:slope6(firm.series[a],w)}));
+  const level = weightedLevel(firm,w);
+  const slope = areas.reduce((s,x)=>s+x.slope,0)/areas.length;
+  const below = areas.filter(x=>x.level<th).sort((a,b)=>a.level-b.level);
+  const weeksToRenew = firm.renew + (12-w);
+  const worst = areas.slice().sort((a,b)=>a.level-b.level)[0];
+  let cls, label;
+  if(below.length===0 && slope>=0.5){ cls='exp'; label='Expansion-ready'; }
+  else if(below.length===0 && slope>=-0.1){ cls='safe'; label='Renewal-safe'; }
+  else if(below.length>0 && below[0].slope<-0.3 && weeksToRenew<=6){ cls='risk'; label='Churn risk'; }
+  else if(below.length>0 && below[0].slope<-0.2){ cls='risk'; label='Churn risk'; }
+  else { cls='watch'; label='Watch'; }
+  return {cls,label,level,slope,below,weeksToRenew,worst,areas};
+}
+
+/* next practice area to sell (expansion target) = first not-yet-live in canonical order */
+function nextArea(firm){ return AREA_ORDER.find(a=>!firm.liveAreas.includes(a)) || null; }
+
+/* ---------------- chart render ---------------- */
+function buildLines(){
+  const pal=palette();
+  if(state.view==='firm'){
+    const firm=FIRMS.find(f=>f.id===state.firm);
+    return firm.liveAreas.filter(a=>!state.hidden.has(a)).map(a=>({
+      key:a, label:AREA_SHORT[a], color:pal.area[a], series:firm.series[a], width:2.4, dash:null, bold:false
+    }));
+  } else {
+    // by practice area: one line per firm live in this area, + portfolio mean (bold)
+    const firms=FIRMS.filter(f=>f.liveAreas.includes(state.area));
+    const lines=firms.map((f,i)=>({
+      key:f.id, label:f.short, color:pal.firmColors[FIRMS.indexOf(f)%pal.firmColors.length],
+      series:f.series[state.area], width:1.8, dash:null, bold:false, firm:f
+    }));
+    // portfolio volume-weighted mean series for this area
+    const mean=[]; for(let w=1;w<=12;w++){let num=0,den=0; firms.forEach(f=>{const v=f.volume[state.area][w-1]; num+=f.series[state.area][w-1]*v; den+=v;}); mean.push(num/den);}
+    lines.push({key:'__mean',label:'Portfolio mean',color:pal.ink,width:3,dash:null,bold:true,series:mean});
+    return lines;
+  }
+}
+
+function renderChart(){
+  const pal=palette(), w=state.week, th=state.threshold;
+  const lines=buildLines();
+  let s='';
+
+  // safe-zone wash + gridlines
+  s+=`<rect x="${P.l}" y="${py(P.ymax)}" width="${P.W-P.l-P.r}" height="${py(th)-py(P.ymax)}" fill="${pal.wash}"/>`;
+  for(let g=P.ymin; g<=P.ymax; g+=10){
+    s+=`<line x1="${P.l}" y1="${py(g)}" x2="${P.W-P.r}" y2="${py(g)}" stroke="${pal.grid}" stroke-width="1"/>`;
+    s+=`<text x="${P.l-10}" y="${py(g)+4}" text-anchor="end" font-size="11" fill="${pal.mut}" class="num">${g}</text>`;
+  }
+  // threshold line
+  s+=`<line x1="${P.l}" y1="${py(th)}" x2="${P.W-P.r}" y2="${py(th)}" stroke="${pal.safe}" stroke-width="1.4" stroke-dasharray="5 4" opacity=".8"/>`;
+  s+=`<text x="${P.W-P.r+6}" y="${py(th)-6}" font-size="10.5" fill="${pal.safe}" font-weight="600">renewal-safe ${th}%</text>`;
+
+  // x ticks
+  for(let wk=1; wk<=12; wk++){
+    const show = wk%2===1 || wk===12;
+    if(show) s+=`<text x="${px(wk)}" y="${P.H-P.b+22}" text-anchor="middle" font-size="10" fill="${pal.mut}">${WEEK_DATES[wk-1]}</text>`;
+    s+=`<line x1="${px(wk)}" y1="${P.H-P.b}" x2="${px(wk)}" y2="${P.H-P.b+4}" stroke="${pal.axis}" stroke-width="1"/>`;
+  }
+
+  // vertical as-of marker
+  s+=`<line x1="${px(w)}" y1="${P.t}" x2="${px(w)}" y2="${P.H-P.b}" stroke="${pal.axis}" stroke-width="1.4" stroke-dasharray="3 3"/>`;
+  s+=`<rect x="${px(w)-24}" y="${P.t-2}" width="48" height="16" rx="4" fill="${pal.surface}" stroke="${pal.grid}"/>`;
+  s+=`<text x="${px(w)}" y="${P.t+9}" text-anchor="middle" font-size="9.5" fill="${pal.mut}" font-weight="600">wk ${w}</text>`;
+
+  // lines
+  lines.forEach(ln=>{
+    const pts=ln.series.map((v,i)=>`${px(i+1)},${py(v)}`).join(' ');
+    // area fill under bold / single lines
+    if(ln.bold || (state.view==='firm' && lines.length<=2)){
+      const area=`${P.l},${P.H-P.b} `+ln.series.map((v,i)=>`${px(i+1)},${py(v)}`).join(' ')+` ${px(12)},${P.H-P.b}`;
+      s+=`<polygon points="${area}" fill="${ln.color}" opacity="${document.documentElement.getAttribute('data-theme')==='dark'?.10:.07}"/>`;
+    }
+    s+=`<polyline points="${pts}" fill="none" stroke="${ln.color}" stroke-width="${ln.width}" stroke-linejoin="round" stroke-linecap="round" opacity="${ln.bold?1:.92}"/>`;
+    // as-of dot + end label
+    const vy=py(val(ln.series,w));
+    s+=`<circle cx="${px(w)}" cy="${vy}" r="${ln.bold?4.5:3.6}" fill="${pal.surface}" stroke="${ln.color}" stroke-width="2"/>`;
+    // end-of-line label at week 12
+    const ey=py(ln.series[11]);
+    s+=`<text x="${px(12)+7}" y="${ey+3.5}" font-size="10.5" fill="${ln.color}" font-weight="${ln.bold?700:600}">${ln.label}</text>`;
+  });
+
+  document.getElementById('chart').innerHTML=s;
+}
+
+/* ---------------- legend ---------------- */
+function renderLegend(){
+  const pal=palette(), el=document.getElementById('legend');
+  if(state.view==='firm'){
+    const firm=FIRMS.find(f=>f.id===state.firm);
+    el.innerHTML=firm.liveAreas.map(a=>{
+      const on=!state.hidden.has(a);
+      return `<button class="lg" aria-pressed="${on}" onclick="toggleArea('${a}')">
+        <span class="dot" style="background:${pal.area[a]}"></span>${AREA_LABEL[a]}</button>`;
+    }).join('') + `<span class="lg" style="cursor:default;border-style:dashed"><span class="dot" style="background:${pal.safe}"></span>renewal-safe line</span>`;
+  } else {
+    el.innerHTML=AREA_ORDER.map(a=>{
+      const sel=state.area===a;
+      const n=FIRMS.filter(f=>f.liveAreas.includes(a)).length;
+      return `<button class="lg area-sel" aria-pressed="${sel}" onclick="setArea('${a}')">
+        <span class="dot" style="background:${pal.area[a]}"></span>${AREA_LABEL[a]} <span style="color:var(--faint)">· ${n} live</span></button>`;
+    }).join('');
+  }
+}
+
+/* ---------------- portfolio list ---------------- */
+function badgeFor(cls){return {exp:'b-exp',safe:'b-safe',watch:'b-watch',risk:'b-risk'}[cls];}
+function trendGlyph(sl){
+  if(sl>0.25) return `<span class="trend up">▲ +${sl.toFixed(1)}</span>`;
+  if(sl<-0.25) return `<span class="trend down">▼ ${sl.toFixed(1)}</span>`;
+  return `<span class="trend flatc">▬ flat</span>`;
+}
+function miniSpark(series,color){
+  const w=66,h=22,pad=3, min=Math.min(...series)-1, max=Math.max(...series)+1;
+  const sx=i=>pad+i/(series.length-1)*(w-2*pad);
+  const sy=v=>pad+(1-(v-min)/(max-min))*(h-2*pad);
+  const pts=series.map((v,i)=>`${sx(i).toFixed(1)},${sy(v).toFixed(1)}`).join(' ');
+  return `<svg class="spark" viewBox="0 0 ${w} ${h}"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${sx(series.length-1).toFixed(1)}" cy="${sy(series[series.length-1]).toFixed(1)}" r="2.2" fill="${color}"/></svg>`;
+}
+
+function renderPortfolio(){
+  const pal=palette(), w=state.week, th=state.threshold, el=document.getElementById('portList');
+  if(state.view==='firm'){
+    document.getElementById('portHd').textContent='Portfolio';
+    document.getElementById('portSub').textContent='8 firms · sorted by renewal risk';
+    // sort: risk first, then watch, then safe/exp by level asc
+    const rank={risk:0,watch:1,safe:2,exp:3};
+    const rows=FIRMS.map(f=>({f,c:classifyFirm(f,w,th)}))
+      .sort((a,b)=> rank[a.c.cls]-rank[b.c.cls] || a.c.level-b.c.level);
+    el.innerHTML=rows.map(({f,c})=>{
+      const avg=firmAvgSeries(f), color=c.cls==='risk'?pal.risk:(c.cls==='watch'?pal.watch:pal.safe);
+      const chips=f.liveAreas.map(a=>AREA_SHORT[a]).join(' · ');
+      return `<button class="firm" aria-selected="${f.id===state.firm}" onclick="selectFirm('${f.id}')">
+        <div class="firm-top">
+          <div><div class="firm-name">${f.short}</div><div class="firm-meta">${chips}</div></div>
+          <span class="badge ${badgeFor(c.cls)}">${c.label}</span>
+        </div>
+        <div class="firm-bottom">
+          <div class="fp"><span class="val num" style="color:${color}">${c.level.toFixed(0)}<span class="u">%</span></span>${trendGlyph(c.slope)}</div>
+          ${miniSpark(avg.slice(0,w), color)}
+        </div>
+      </button>`;
+    }).join('');
+  } else {
+    // by-area: ranked firm list for the selected area
+    document.getElementById('portHd').textContent=AREA_LABEL[state.area];
+    document.getElementById('portSub').textContent='firms ranked by first-pass · expansion top, risk bottom';
+    const firms=FIRMS.filter(f=>f.liveAreas.includes(state.area))
+      .map(f=>({f,level:val(f.series[state.area],w),slope:slope6(f.series[state.area],w)}))
+      .sort((a,b)=>b.level-a.level);
+    el.innerHTML=firms.map(({f,level,slope},i)=>{
+      const color=level>=th?pal.safe:(slope<-0.2?pal.risk:pal.watch);
+      const tagTxt=level>=th && slope>=0.4 ? 'expansion' : (level<th?'below line':'holding');
+      return `<button class="firm" aria-selected="false" onclick="selectFirmFromArea('${f.id}')">
+        <div class="firm-top">
+          <div><div class="firm-name">${f.short}</div><div class="firm-meta">${tagTxt} · ${fmt(f.volume[state.area][w-1])} reviewed/wk</div></div>
+          <div class="fp"><span class="val num" style="color:${color}">${level.toFixed(0)}<span class="u">%</span></span></div>
+        </div>
+        <div class="firm-bottom">
+          ${trendGlyph(slope)}
+          ${miniSpark(f.series[state.area].slice(0,w), color)}
+        </div>
+      </button>`;
+    }).join('');
+  }
+}
+
+/* ---------------- readout table ---------------- */
+function renderReadout(){
+  const pal=palette(), w=state.week, el=document.getElementById('readout');
+  if(state.view==='firm'){
+    const firm=FIRMS.find(f=>f.id===state.firm);
+    let totRev=0,totApp=0;
+    const rows=firm.liveAreas.map(a=>{
+      const rate=val(firm.series[a],w), rev=firm.volume[a][w-1], app=Math.round(rate/100*rev);
+      totRev+=rev; totApp+=app;
+      const sl=slope6(firm.series[a],w);
+      return `<tr>
+        <td><span class="swatch" style="background:${pal.area[a]}"></span>${AREA_LABEL[a]}</td>
+        <td class="r num" style="font-weight:650">${rate.toFixed(1)}%</td>
+        <td class="r num">${fmt(app)} / ${fmt(rev)}</td>
+        <td class="r">${trendGlyph(sl)}</td>
+      </tr>`;
+    }).join('');
+    const totRate=totRev?(totApp/totRev*100):0;
+    el.innerHTML=`<thead><tr><th>Practice area</th><th class="r">First-pass</th><th class="r">Approved / reviewed</th><th class="r">6-wk</th></tr></thead>
+      <tbody>${rows}
+      <tr class="tot"><td>Firm · week ${w}</td><td class="r num">${totRate.toFixed(1)}%</td><td class="r num">${fmt(totApp)} / ${fmt(totRev)}</td><td class="r"></td></tr></tbody>`;
+  } else {
+    const firms=FIRMS.filter(f=>f.liveAreas.includes(state.area));
+    let totRev=0,totApp=0;
+    firms.forEach(f=>{const rev=f.volume[state.area][w-1]; totRev+=rev; totApp+=Math.round(val(f.series[state.area],w)/100*rev);});
+    const mean=totRev?(totApp/totRev*100):0;
+    const below=firms.filter(f=>val(f.series[state.area],w)<state.threshold).length;
+    el.innerHTML=`<thead><tr><th>${AREA_LABEL[state.area]} · portfolio</th><th class="r">Value</th></tr></thead><tbody>
+      <tr><td>Volume-weighted mean first-pass</td><td class="r num" style="font-weight:650">${mean.toFixed(1)}%</td></tr>
+      <tr><td>Firms live in this area</td><td class="r num">${firms.length}</td></tr>
+      <tr><td>Below the ${state.threshold}% renewal-safe line</td><td class="r num" style="color:${below?pal.risk:pal.safe}">${below}</td></tr>
+      <tr class="tot"><td>Outputs reviewed · week ${w}</td><td class="r num">${fmt(totRev)}</td></tr>
+    </tbody>`;
+  }
+}
+
+/* ---------------- signal panel ---------------- */
+function pillStyle(cls){
+  const map={exp:['var(--safe-bg)','var(--safe)'],safe:['var(--accent-soft)','var(--steady)'],watch:['var(--watch-bg)','var(--watch)'],risk:['var(--risk-bg)','var(--risk)']};
+  return `background:${map[cls][0]};color:${map[cls][1]}`;
+}
+function renderSignal(){
+  const w=state.week, th=state.threshold;
+  const vPill=document.getElementById('vPill');
+  const labs=document.querySelectorAll('#panelSignal .vm .l');
+  if(state.view==='firm'){
+    labs[2].textContent='weeks to renewal'; labs[3].textContent='outputs reviewed / wk';
+    const firm=FIRMS.find(f=>f.id===state.firm);
+    const c=classifyFirm(firm,w,th);
+    vPill.textContent=c.label; vPill.setAttribute('style','')  ; vPill.className='v-pill'; vPill.setAttribute('style',pillStyle(c.cls));
+    document.getElementById('vFirm').innerHTML=`${firm.name} <span class="m">· ${firm.hq}</span>`;
+    document.getElementById('vLevel').textContent=c.level.toFixed(0)+'%';
+    const sEl=document.getElementById('vSlope');
+    sEl.textContent=(c.slope>=0?'+':'')+c.slope.toFixed(1)+' /wk';
+    sEl.style.color = c.slope>0.25?'var(--safe)':(c.slope<-0.25?'var(--risk)':'var(--muted)');
+    document.getElementById('vRenew').textContent=c.weeksToRenew;
+    document.getElementById('vReviewed').textContent=fmt(firmReviewedAt(firm,w));
+
+    // action text
+    const nx=nextArea(firm), worst=c.worst;
+    const bestArea=c.areas.slice().sort((a,b)=>b.level-a.level)[0];
+    let txt='', who='';
+    if(c.cls==='exp'){
+      txt=`${AREA_LABEL[bestArea.a]} first-pass sits at <b>${bestArea.level.toFixed(0)}%</b> and is climbing (${(bestArea.slope>=0?'+':'')}${bestArea.slope.toFixed(1)}/wk) — the reviewer trusts the agent. `+
+          (nx?`Every live area clears ${th}%, so this account is <b>ready for the ${AREA_LABEL[nx]} expansion motion</b> before the week-${w+firm.renew} QBR.`
+             :`All four practice areas are live and clearing ${th}% — pursue seat expansion and a reference story.`);
+      who='Owner: RevOps → CS · trigger expansion play';
+    } else if(c.cls==='safe'){
+      txt=`Every live area is above the ${th}% line and steady (${(c.slope>=0?'+':'')}${c.slope.toFixed(1)}/wk). Renewal is <b>low-risk</b>. `+
+          (nx?`Watch for a ${th+5}%+ streak in ${AREA_LABEL[bestArea.a]} as the trigger to open the ${AREA_LABEL[nx]} conversation.`:`Hold cadence; look for a seat-expansion opening.`);
+      who='Owner: CS · standard renewal cadence';
+    } else if(c.cls==='watch'){
+      txt=`${AREA_LABEL[worst.a]} first-pass is <b>${worst.level.toFixed(0)}%</b> (${(worst.slope>=0?'+':'')}${worst.slope.toFixed(1)}/wk) — `+
+          (worst.slope>0.3?`below the ${th}% line but <b>ramping</b>, typical of a newer practice area. Keep enablement on it; it's an expansion target once it clears the line.`
+                          :`drifting within band. Put it on the QBR agenda before it crosses the line, ${c.weeksToRenew} weeks out from renewal.`);
+      who='Owner: CS · monitor '+AREA_SHORT[worst.a];
+    } else {
+      const drop=(worst.slope*6);
+      txt=`<b>${AREA_LABEL[worst.a]} first-pass has fallen to ${worst.level.toFixed(0)}%</b> (${drop.toFixed(0)} pts over 6 weeks), below the ${th}% renewal-safe line — with renewal in <b>${c.weeksToRenew} weeks</b>. This is a churn signal <b>weeks ahead</b> of the call. Escalate now and pull the rework reasons below into the save play.`;
+      who='Owner: RevOps + CS · escalate this week';
+    }
+    document.getElementById('actionText').innerHTML=txt;
+    document.getElementById('actionWho').textContent=who;
+
+    // rework: focus on the lowest-first-pass live area
+    renderRework(firm.liveAreas.length?worst.a:'CAS',
+      (function(){const a=worst.a; const rev=firm.volume[a][w-1]; const app=Math.round(val(firm.series[a],w)/100*rev); return rev-app;})(),
+      `${AREA_LABEL[worst.a]} · week ${w} — each rework is captured as a training signal.`);
+  } else {
+    // by-area portfolio verdict
+    const firms=FIRMS.filter(f=>f.liveAreas.includes(state.area));
+    let totRev=0,totApp=0,sentBack=0;
+    firms.forEach(f=>{const rev=f.volume[state.area][w-1],app=Math.round(val(f.series[state.area],w)/100*rev); totRev+=rev; totApp+=app; sentBack+=rev-app;});
+    const mean=totRev?(totApp/totRev*100):0;
+    const below=firms.map(f=>({f,l:val(f.series[state.area],w)})).filter(x=>x.l<th).sort((a,b)=>a.l-b.l);
+    const meanSlope=firms.reduce((s,f)=>s+slope6(f.series[state.area],w),0)/firms.length;
+    let cls = mean>=th && meanSlope>=0.4 ? 'exp' : (mean>=th? 'safe' : (meanSlope<-0.2?'risk':'watch'));
+    const labelMap={exp:'Expansion pocket',safe:'Healthy',watch:'Newest surface',risk:'At risk'};
+    vPill.textContent=labelMap[cls]; vPill.className='v-pill'; vPill.setAttribute('style',pillStyle(cls));
+    document.getElementById('vFirm').innerHTML=`${AREA_LABEL[state.area]} <span class="m">· across ${firms.length} firms</span>`;
+    document.getElementById('vLevel').textContent=mean.toFixed(0)+'%';
+    const sEl=document.getElementById('vSlope'); sEl.textContent=(meanSlope>=0?'+':'')+meanSlope.toFixed(1)+' /wk';
+    sEl.style.color=meanSlope>0.25?'var(--safe)':(meanSlope<-0.25?'var(--risk)':'var(--muted)');
+    document.getElementById('vRenew').textContent=below.length;
+    document.getElementById('vReviewed').textContent=fmt(totRev);
+    // relabel the two lower metric captions contextually via title attributes
+    document.querySelectorAll('#panelSignal .vm .l')[2].textContent='firms below line';
+    document.querySelectorAll('#panelSignal .vm .l')[3].textContent='outputs reviewed / wk';
+
+    let txt='';
+    if(state.area==='Audit'){
+      txt=`Audit is Basis's <b>newest practice area</b>, so it runs the lowest first-pass (mean <b>${mean.toFixed(0)}%</b>) — expansion revenue <b>and</b> churn risk concentrate here. ${below.length?`<b>${below[0].f.short}</b> is lowest at ${below[0].l.toFixed(0)}%; prioritize enablement there.`:'All firms clear the line — push Audit expansion across the base.'}`;
+    } else if(cls==='exp'){
+      txt=`${AREA_LABEL[state.area]} first-pass averages <b>${mean.toFixed(0)}%</b> and is climbing — a portfolio-wide <b>expansion pocket</b>. Package the top firms as reference stories and pursue seat growth.`;
+    } else if(cls==='risk'){
+      txt=`${AREA_LABEL[state.area]} first-pass is drifting (mean ${mean.toFixed(0)}%, ${meanSlope.toFixed(1)}/wk) with <b>${below.length} firm${below.length===1?'':'s'} below the line</b>${below.length?` — worst is ${below[0].f.short} at ${below[0].l.toFixed(0)}%`:''}. Treat as a product signal, not just an account one.`;
+    } else {
+      txt=`${AREA_LABEL[state.area]} is healthy across the base (mean <b>${mean.toFixed(0)}%</b>, ${below.length} below the line). Steady renewal contributor; look for the highest-trust firms to expand.`;
+    }
+    document.getElementById('actionText').innerHTML=txt;
+    document.getElementById('actionWho').textContent=`${fmt(sentBack)} outputs sent back for rework this week`;
+    renderRework(state.area, sentBack, `${AREA_LABEL[state.area]} · portfolio · week ${w} — aggregated rework reasons.`);
+  }
+}
+
+function renderRework(area, sentBack, caption){
+  const pal=palette();
+  document.getElementById('reworkCap').textContent=caption;
+  const reasons=REWORK[area]||REWORK.CAS;
+  const wsum=reasons.reduce((s,r)=>s+r[1],0);
+  const max=reasons[0][1]/wsum;
+  document.getElementById('reworkList').innerHTML=reasons.map(([name,wt])=>{
+    const share=wt/wsum, count=Math.round(sentBack*share), pct=(share/max*100);
+    return `<div class="rw">
+      <div class="rw-top"><span>${name}</span><span class="c num">${fmt(count)}</span></div>
+      <div class="rw-bar"><div class="rw-fill" style="width:${pct.toFixed(0)}%"></div></div>
+    </div>`;
+  }).join('');
+}
+
+/* ---------------- threshold footer count ---------------- */
+function renderThreshInfo(){
+  const w=state.week, th=state.threshold;
+  document.getElementById('threshVal').textContent=th;
+  const risky=FIRMS.filter(f=>{const c=classifyFirm(f,w,th); return c.cls==='risk';}).length;
+  const exp=FIRMS.filter(f=>{const c=classifyFirm(f,w,th); return c.cls==='exp';}).length;
+  document.getElementById('threshCount').innerHTML=`At this line: <b style="color:var(--safe)">${exp} expansion-ready</b> · <b style="color:var(--risk)">${risky} churn-risk</b>`;
+  // portfolio KPI
+  let totRev=0,totApp=0;
+  FIRMS.forEach(f=>f.liveAreas.forEach(a=>{const rev=f.volume[a][w-1]; totRev+=rev; totApp+=Math.round(val(f.series[a],w)/100*rev);}));
+  document.getElementById('kpiPortfolio').textContent=(totApp/totRev*100).toFixed(0)+'%';
+  document.getElementById('kpiPortfolioSub').textContent=`${fmt(totApp)} of ${fmt(totRev)} outputs approved on first review.`;
+}
+
+/* ---------------- master render ---------------- */
+function render(){
+  // chart title
+  if(state.view==='firm'){
+    const firm=FIRMS.find(f=>f.id===state.firm);
+    document.getElementById('chartTitle').textContent=firm.name+' — first-pass approval';
+    document.getElementById('chartSub').textContent=`${firm.liveAreas.length} practice areas live · ${firm.hq} · renews in ${firm.renew+(12-state.week)} wks`;
+  } else {
+    document.getElementById('chartTitle').textContent=AREA_LABEL[state.area]+' — first-pass across the portfolio';
+    document.getElementById('chartSub').textContent=`each line a firm · bold line = volume-weighted portfolio mean`;
+  }
+  document.getElementById('weekLabel').textContent='Week of '+WEEK_DATES[state.week-1];
+  renderChart(); renderLegend(); renderPortfolio(); renderReadout(); renderSignal(); renderThreshInfo();
+}
+
+/* ---------------- interactions ---------------- */
+function setView(v){
+  state.view=v;
+  document.getElementById('viewFirm').setAttribute('aria-pressed',v==='firm');
+  document.getElementById('viewArea').setAttribute('aria-pressed',v==='area');
+  render();
+}
+function selectFirm(id){ state.firm=id; state.hidden.clear(); render(); }
+function selectFirmFromArea(id){ state.view='firm'; state.firm=id; setView('firm'); }
+function setArea(a){ state.area=a; render(); }
+function toggleArea(a){
+  const firm=FIRMS.find(f=>f.id===state.firm);
+  if(firm.liveAreas.length<=1) return;
+  if(state.hidden.has(a)) state.hidden.delete(a);
+  else if(firm.liveAreas.length-state.hidden.size>1) state.hidden.add(a);
+  render();
+}
+function toggleTheme(){
+  const cur=document.documentElement.getAttribute('data-theme');
+  document.documentElement.setAttribute('data-theme', cur==='dark'?'light':'dark');
+  render();
+}
+
+document.getElementById('week').addEventListener('input',e=>{ state.week=+e.target.value; render(); });
+document.getElementById('thresh').addEventListener('input',e=>{ state.threshold=+e.target.value; render(); });
+
+/* scrub the chart by dragging across it */
+(function(){
+  const svg=document.getElementById('chart');
+  function weekFromEvent(e){
+    const r=svg.getBoundingClientRect();
+    const xv=( (e.touches?e.touches[0].clientX:e.clientX) - r.left )/r.width*P.W;
+    let wk=Math.round(1+(xv-P.l)/(P.W-P.l-P.r)*11);
+    wk=Math.max(1,Math.min(12,wk));
+    if(wk!==state.week){ state.week=wk; document.getElementById('week').value=wk; render(); }
+  }
+  let dragging=false;
+  svg.addEventListener('pointerdown',e=>{dragging=true; svg.setPointerCapture(e.pointerId); weekFromEvent(e);});
+  svg.addEventListener('pointermove',e=>{ if(dragging) weekFromEvent(e); });
+  svg.addEventListener('pointerup',()=>dragging=false);
+  svg.addEventListener('pointercancel',()=>dragging=false);
+})();
+
+render();
+</script>
+</body>
+</html>
