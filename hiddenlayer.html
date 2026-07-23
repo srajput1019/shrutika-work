@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HiddenLayer · ATLAS → Shipped — a detection-to-fix tracker · Shrutika Rajput</title>
+<style>
+/* ============================================================
+   ATLAS → Shipped — a detection-to-fix tracker for HiddenLayer AIDR
+   Grounded in HiddenLayer's real product: AI Detection & Response
+   (AIDR), Model Scanner, Automated Red Teaming, ATLAS/OWASP mapping,
+   Model Genealogy, AIBOM. Traces a MITRE ATLAS detection from the
+   raw signal a model-security engine emits to the fix a customer
+   actually ships — and makes it legible to a SOC analyst who is not
+   an ML team. Self-contained. No external requests. Theme-aware.
+   ============================================================ */
+:root{
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+
+  --bg:#eaefec; --surface:#ffffff; --surface-2:#f3f7f4; --surface-3:#e7eeea;
+  --border:#d9e2dc; --border-strong:#c2cec7;
+  --ink:#0c1512; --muted:#516057; --faint:#849188;
+
+  --brand:#0c9d5f; --brand-ink:#0a7d4c; --brand-bright:#12c074; --brand-wash:#e2f4ec;
+  --info:#2563d8; --info-wash:#e6eefc; --info-line:#c4d8f6;
+
+  /* severity ramp */
+  --crit:#d92d38; --crit-wash:#fceaec; --crit-line:#f2c4c9;
+  --high:#c9640c; --high-wash:#fbeddc; --high-line:#efd2ac;
+  --med:#a67c07; --med-wash:#f8f1d8; --med-line:#e7d9a6;
+  --low:#2d7d9a; --low-wash:#e3f0f5; --low-line:#bcdde7;
+
+  --met:#0c9d5f; --met-wash:#e2f4ec; --met-line:#bce4d0;
+
+  --shadow-sm:0 1px 2px rgba(12,21,18,.05);
+  --shadow:0 1px 2px rgba(12,21,18,.05),0 14px 34px -20px rgba(12,21,18,.28);
+  --shadow-lg:0 1px 2px rgba(12,21,18,.06),0 30px 60px -28px rgba(12,21,18,.40);
+  --radius:14px; --radius-lg:20px;
+}
+@media (prefers-color-scheme:dark){:root[data-theme="auto"]{
+  --bg:#05080a; --surface:#0b1114; --surface-2:#0f171b; --surface-3:#152227;
+  --border:#1d2b30; --border-strong:#2a3c43;
+  --ink:#e7efeb; --muted:#93a4a0; --faint:#63746f;
+
+  --brand:#2fe08f; --brand-ink:#57eaa3; --brand-bright:#2fe08f; --brand-wash:#0d2a20;
+  --info:#5f97ff; --info-wash:#13233f; --info-line:#26406b;
+
+  --crit:#ff6b71; --crit-wash:#2d1417; --crit-line:#4c2126;
+  --high:#f0983f; --high-wash:#2c1d0f; --high-line:#49321a;
+  --med:#e0bb44; --med-wash:#2a2410; --med-line:#463c1b;
+  --low:#5cc4e2; --low-wash:#0e2830; --low-line:#1d4451;
+
+  --met:#2fe08f; --met-wash:#0d2a20; --met-line:#1c4736;
+
+  --shadow-sm:0 1px 2px rgba(0,0,0,.45);
+  --shadow:0 1px 2px rgba(0,0,0,.45),0 18px 40px -22px rgba(0,0,0,.8);
+  --shadow-lg:0 1px 2px rgba(0,0,0,.55),0 34px 70px -30px rgba(0,0,0,.9);
+}}
+:root[data-theme="dark"]{
+  --bg:#05080a; --surface:#0b1114; --surface-2:#0f171b; --surface-3:#152227;
+  --border:#1d2b30; --border-strong:#2a3c43;
+  --ink:#e7efeb; --muted:#93a4a0; --faint:#63746f;
+  --brand:#2fe08f; --brand-ink:#57eaa3; --brand-bright:#2fe08f; --brand-wash:#0d2a20;
+  --info:#5f97ff; --info-wash:#13233f; --info-line:#26406b;
+  --crit:#ff6b71; --crit-wash:#2d1417; --crit-line:#4c2126;
+  --high:#f0983f; --high-wash:#2c1d0f; --high-line:#49321a;
+  --med:#e0bb44; --med-wash:#2a2410; --med-line:#463c1b;
+  --low:#5cc4e2; --low-wash:#0e2830; --low-line:#1d4451;
+  --met:#2fe08f; --met-wash:#0d2a20; --met-line:#1c4736;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.45);
+  --shadow:0 1px 2px rgba(0,0,0,.45),0 18px 40px -22px rgba(0,0,0,.8);
+  --shadow-lg:0 1px 2px rgba(0,0,0,.55),0 34px 70px -30px rgba(0,0,0,.9);
+}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:
+    radial-gradient(1100px 560px at 84% -12%, color-mix(in srgb,var(--brand) 10%, transparent), transparent 62%),
+    var(--bg);
+  color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;min-height:100vh;
+}
+.wrap{max-width:1280px;margin:0 auto;padding:0 22px 76px}
+a{color:var(--brand-ink);text-decoration:none}
+button{font-family:inherit}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.tnum{font-variant-numeric:tabular-nums}
+
+/* ---------- masthead ---------- */
+.mast{display:flex;align-items:center;gap:14px;padding:22px 0 16px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:11px}
+.logo{width:36px;height:36px;border-radius:9px;
+  background:
+    linear-gradient(150deg,var(--brand-bright),color-mix(in srgb,var(--brand) 40%,#04140d));
+  display:grid;place-items:center;box-shadow:var(--shadow-sm);position:relative;overflow:hidden}
+.logo svg{width:22px;height:22px}
+.brand .bt{font-weight:750;font-size:16px;letter-spacing:-.01em}
+.brand .bs{font-size:11.5px;color:var(--faint);margin-top:-2px;letter-spacing:.01em}
+.grow{flex:1 1 auto}
+.tframe{display:inline-flex;border:1px solid var(--border);background:var(--surface);border-radius:999px;padding:3px;gap:2px;box-shadow:var(--shadow-sm)}
+.tframe button{border:0;background:transparent;color:var(--muted);font-size:12px;font-weight:600;padding:6px 11px;border-radius:999px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:.16s}
+.tframe button[aria-pressed="true"]{background:var(--surface-3);color:var(--ink);box-shadow:var(--shadow-sm)}
+.pill{font-family:var(--mono);font-size:11px;color:var(--muted);border:1px solid var(--border);background:var(--surface);border-radius:999px;padding:6px 11px;box-shadow:var(--shadow-sm);display:inline-flex;gap:7px;align-items:center}
+.pill .g{width:7px;height:7px;border-radius:50%;background:var(--brand-bright);box-shadow:0 0 0 3px color-mix(in srgb,var(--brand) 22%,transparent)}
+
+/* ---------- hero ---------- */
+.hero{margin:8px 0 18px}
+.kick{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--brand-ink);font-weight:600}
+h1{font-size:clamp(1.72rem,3.5vw,2.4rem);line-height:1.07;letter-spacing:-.022em;margin:10px 0 0;font-weight:750;max-width:22ch}
+h1 em{font-style:normal;color:var(--brand-ink)}
+.lede{color:var(--muted);max-width:78ch;margin:14px 0 0;font-size:15.5px;line-height:1.62}
+.lede b{color:var(--ink);font-weight:650}
+
+/* ---------- stat strip ---------- */
+.bench{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:22px}
+@media(max-width:900px){.bench{grid-template-columns:repeat(2,1fr)}}
+.bc{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 15px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden}
+.bc .n{font-size:23px;font-weight:750;letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums}
+.bc .l{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.4}
+.bc .src{font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--faint);margin-top:9px}
+.bc.b1 .n{color:var(--brand-ink)} .bc.b2 .n{color:var(--ink)} .bc.b3 .n{color:var(--high)} .bc.b4 .n{color:var(--info)}
+
+/* ---------- console shell ---------- */
+.console{margin-top:22px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);overflow:hidden}
+.cbar{display:flex;align-items:center;gap:12px;padding:13px 18px;border-bottom:1px solid var(--border);background:var(--surface-2);flex-wrap:wrap}
+.cbar .ct{font-weight:700;font-size:14px;display:flex;align-items:center;gap:9px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--brand-bright);box-shadow:0 0 0 4px color-mix(in srgb,var(--brand) 18%,transparent)}
+.chip{font-family:var(--mono);font-size:11px;color:var(--muted);background:var(--surface-3);border:1px solid var(--border);padding:3px 9px;border-radius:999px;letter-spacing:.02em}
+.chip.live{color:var(--met);border-color:var(--met-line);background:var(--met-wash)}
+.seg{display:inline-flex;border:1px solid var(--border);background:var(--surface);border-radius:9px;padding:2px;gap:2px}
+.seg button{border:0;background:transparent;color:var(--muted);font-size:11.5px;font-weight:600;padding:5px 10px;border-radius:7px;cursor:pointer;transition:.15s;font-family:var(--mono);letter-spacing:.02em}
+.seg button[aria-pressed="true"]{background:var(--surface-3);color:var(--ink);box-shadow:var(--shadow-sm)}
+
+/* ---------- main split ---------- */
+.split{display:grid;grid-template-columns:322px 1fr;min-height:640px}
+@media(max-width:1040px){.split{grid-template-columns:1fr}}
+.rail{border-right:1px solid var(--border);background:var(--surface-2);display:flex;flex-direction:column}
+@media(max-width:1040px){.rail{border-right:0;border-bottom:1px solid var(--border)}}
+.railh{padding:13px 15px 6px;display:flex;align-items:center;justify-content:space-between}
+.railh .t{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+.filters{display:flex;gap:6px;padding:2px 12px 10px;flex-wrap:wrap}
+.fbtn{border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:10.5px;font-weight:600;padding:4px 9px;border-radius:999px;cursor:pointer;font-family:var(--mono);letter-spacing:.02em;transition:.15s}
+.fbtn[aria-pressed="true"]{color:var(--ink);border-color:var(--border-strong);background:var(--surface-3)}
+.queue{padding:0 10px 12px;display:flex;flex-direction:column;gap:7px;overflow-y:auto;max-height:640px}
+.qcard{text-align:left;width:100%;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:11px 12px;cursor:pointer;transition:.16s;display:block;position:relative}
+.qcard:hover{border-color:var(--border-strong)}
+.qcard[aria-current="true"]{border-color:var(--brand);box-shadow:0 0 0 1px var(--brand),var(--shadow-sm)}
+.qcard .qtop{display:flex;align-items:center;gap:8px;justify-content:space-between}
+.qcard .tech{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.02em}
+.qcard .qname{font-weight:650;font-size:13.5px;margin-top:5px;letter-spacing:-.01em;line-height:1.28}
+.qcard .qmeta{display:flex;align-items:center;gap:7px;margin-top:8px;flex-wrap:wrap}
+.sev{font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:999px;border:1px solid}
+.sev.crit{color:var(--crit);background:var(--crit-wash);border-color:var(--crit-line)}
+.sev.high{color:var(--high);background:var(--high-wash);border-color:var(--high-line)}
+.sev.med{color:var(--med);background:var(--med-wash);border-color:var(--med-line)}
+.sev.low{color:var(--low);background:var(--low-wash);border-color:var(--low-line)}
+.src{font-family:var(--mono);font-size:9.5px;letter-spacing:.03em;color:var(--faint)}
+.qstatus{font-family:var(--mono);font-size:9px;letter-spacing:.05em;text-transform:uppercase;padding:2px 6px;border-radius:6px;font-weight:700}
+.qstatus.open{color:var(--crit);background:var(--crit-wash)}
+.qstatus.prog{color:var(--info);background:var(--info-wash)}
+.qstatus.ship{color:var(--met);background:var(--met-wash)}
+
+.railfoot{margin-top:auto;border-top:1px solid var(--border);padding:12px 15px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rf{}
+.rf .n{font-size:19px;font-weight:750;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.rf .l{font-size:10.5px;color:var(--muted);margin-top:2px;line-height:1.3}
+
+/* ---------- detail ---------- */
+.detail{padding:18px 20px 22px;min-width:0}
+.dhead{display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap}
+.dhead .idcol{min-width:0;flex:1 1 auto}
+.dhead .did{font-family:var(--mono);font-size:11px;color:var(--faint);letter-spacing:.04em}
+.dhead h2{font-size:19px;font-weight:750;letter-spacing:-.015em;margin:5px 0 0;line-height:1.2}
+.tags{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap}
+.tag{font-family:var(--mono);font-size:10.5px;padding:3px 9px;border-radius:999px;border:1px solid var(--border);background:var(--surface-2);color:var(--muted);letter-spacing:.02em;display:inline-flex;gap:6px;align-items:center}
+.tag b{color:var(--ink);font-weight:650}
+.tag.atlas{color:var(--brand-ink);border-color:var(--met-line);background:var(--brand-wash)}
+
+/* stepper */
+.stepper{display:grid;grid-template-columns:repeat(5,1fr);gap:0;margin:20px 0 4px;position:relative}
+.step{position:relative;text-align:center;cursor:pointer;padding-top:26px}
+.step .bead{position:absolute;top:0;left:50%;transform:translateX(-50%);width:22px;height:22px;border-radius:50%;background:var(--surface);border:2px solid var(--border-strong);display:grid;place-items:center;z-index:2;transition:.2s;color:var(--faint)}
+.step .bead svg{width:11px;height:11px}
+.step .line{position:absolute;top:10px;left:-50%;width:100%;height:2px;background:var(--border);z-index:1}
+.step:first-child .line{display:none}
+.step .lb{font-size:11px;font-weight:650;color:var(--muted);letter-spacing:.01em}
+.step .sub{font-family:var(--mono);font-size:9px;color:var(--faint);margin-top:2px;text-transform:uppercase;letter-spacing:.06em}
+.step.done .bead{background:var(--brand);border-color:var(--brand);color:#04140d}
+.step.done .line{background:var(--brand)}
+.step.active .bead{background:var(--surface);border-color:var(--brand);color:var(--brand-ink);box-shadow:0 0 0 4px var(--brand-wash)}
+.step.active .lb{color:var(--ink)}
+:root[data-theme="dark"] .step.done .bead{color:#04140d}
+
+/* panels */
+.panelwrap{margin-top:18px;display:grid;grid-template-columns:1fr;gap:14px}
+.panel{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.ph{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 15px;border-bottom:1px solid var(--border);background:color-mix(in srgb,var(--surface-3) 55%,transparent)}
+.ph .pt{font-weight:700;font-size:12.5px;display:flex;align-items:center;gap:8px}
+.ph .pt .nm{font-family:var(--mono);font-size:9.5px;color:var(--faint);letter-spacing:.08em;text-transform:uppercase}
+.pb{padding:14px 15px}
+
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:760px){.two{grid-template-columns:1fr}}
+
+/* raw signal / ml view */
+.kv{display:flex;flex-direction:column;gap:9px}
+.kv .row{display:grid;grid-template-columns:132px 1fr;gap:10px;align-items:start}
+@media(max-width:520px){.kv .row{grid-template-columns:1fr}}
+.kv .k{font-family:var(--mono);font-size:10.5px;color:var(--faint);letter-spacing:.03em;text-transform:uppercase;padding-top:1px}
+.kv .v{font-size:13px;color:var(--ink);line-height:1.5}
+.kv .v.mono{font-family:var(--mono);font-size:12px;color:var(--muted);word-break:break-all}
+.telemetry{margin-top:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 12px;font-family:var(--mono);font-size:11.5px;color:var(--muted);line-height:1.6}
+.telemetry .lbl{color:var(--brand-ink)}
+.telemetry .val{color:var(--ink)}
+
+/* soc translation cards */
+.trans{display:grid;grid-template-columns:1fr;gap:11px}
+.tcard{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:12px 13px}
+.tcard .h{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);display:flex;align-items:center;gap:7px;margin-bottom:6px}
+.tcard .h .ic{width:15px;height:15px;color:var(--brand-ink)}
+.tcard p{margin:0;font-size:13.5px;line-height:1.55;color:var(--ink)}
+.tcard.risk .h .ic{color:var(--high)}
+.tcard.act{border-color:var(--brand-line,var(--met-line));background:var(--brand-wash)}
+.tcard.act .h .ic{color:var(--brand-ink)}
+.tcard.act p{font-weight:600}
+
+/* decision */
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{width:100%;text-align:left;border:1px solid var(--border);background:var(--surface);border-radius:11px;padding:12px 13px;cursor:pointer;transition:.15s;display:grid;grid-template-columns:22px 1fr auto;gap:11px;align-items:start}
+.opt:hover{border-color:var(--border-strong)}
+.opt[aria-pressed="true"]{border-color:var(--brand);box-shadow:0 0 0 1px var(--brand)}
+.opt .rad{width:16px;height:16px;border-radius:50%;border:2px solid var(--border-strong);margin-top:2px;transition:.15s;position:relative}
+.opt[aria-pressed="true"] .rad{border-color:var(--brand)}
+.opt[aria-pressed="true"] .rad::after{content:"";position:absolute;inset:2px;border-radius:50%;background:var(--brand)}
+.opt .lbl{font-weight:650;font-size:13.5px;line-height:1.35}
+.opt .desc{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.5}
+.opt .rec{font-family:var(--mono);font-size:8.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--brand-ink);background:var(--brand-wash);border:1px solid var(--met-line);padding:2px 6px;border-radius:6px;font-weight:700}
+.opt .chan{font-family:var(--mono);font-size:10px;color:var(--faint);margin-top:6px;letter-spacing:.02em}
+.opt .rc{text-align:right;display:flex;flex-direction:column;gap:3px;align-items:flex-end;min-width:74px}
+.opt .rc .m{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink)}
+.opt .rc .ml{font-family:var(--mono);font-size:8.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.05em}
+
+.oversight{margin-top:14px;background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:12px 13px}
+.oversight .oh{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.oversight .oh .t{font-weight:650;font-size:13px}
+.tog{position:relative;width:150px;height:30px;border:1px solid var(--border);border-radius:999px;background:var(--surface-2);cursor:pointer;display:flex;align-items:center;font-size:0}
+.tog .k{position:absolute;top:2px;left:2px;width:73px;height:24px;border-radius:999px;background:var(--brand);transition:.2s;box-shadow:var(--shadow-sm)}
+.tog[data-on="auto"] .k{transform:translateX(73px);background:var(--high)}
+.tog span{flex:1;text-align:center;z-index:2;font-size:10.5px;font-weight:700;font-family:var(--mono);letter-spacing:.03em;transition:.15s;color:var(--muted)}
+.tog[data-on="hitl"] span.a{color:#04140d}
+.tog[data-on="auto"] span.b{color:#2a1608}
+:root[data-theme="dark"] .tog[data-on="auto"] span.b{color:#1a0f04}
+.oversight .note{font-size:12px;color:var(--muted);margin-top:9px;line-height:1.5;border-top:1px solid var(--border);padding-top:9px}
+.oversight .note b{color:var(--ink)}
+
+/* remediation + shipped */
+.rem{display:grid;grid-template-columns:1fr;gap:12px}
+.rembox{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:13px 14px}
+.rembox .rl{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-bottom:6px}
+.rembox .rv{font-size:13.5px;line-height:1.55;color:var(--ink)}
+.rembox .rv b{color:var(--brand-ink)}
+.remmeta{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:2px}
+@media(max-width:620px){.remmeta{grid-template-columns:1fr}}
+.mm{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:11px 12px}
+.mm .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.mm .v{font-size:14px;font-weight:700;margin-top:4px;letter-spacing:-.01em}
+
+/* risk meter */
+.meter{margin-top:2px}
+.meter .mt{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.meter .mt .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.meter .mt .pct{font-family:var(--mono);font-size:12px;font-weight:700}
+.bar{height:9px;border-radius:999px;background:var(--surface-3);overflow:hidden;border:1px solid var(--border)}
+.bar > i{display:block;height:100%;border-radius:999px;transition:width .5s cubic-bezier(.4,0,.2,1)}
+.barlabels{display:flex;justify-content:space-between;font-family:var(--mono);font-size:9px;color:var(--faint);margin-top:5px;letter-spacing:.05em;text-transform:uppercase}
+
+/* action footer of detail */
+.dfoot{display:flex;align-items:center;gap:10px;margin-top:18px;flex-wrap:wrap}
+.btn{border:1px solid var(--border);background:var(--surface);color:var(--ink);font-weight:650;font-size:13px;padding:10px 16px;border-radius:11px;cursor:pointer;transition:.15s;box-shadow:var(--shadow-sm);display:inline-flex;align-items:center;gap:8px}
+.btn:hover{border-color:var(--border-strong)}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:#04140d}
+.btn.primary:hover{background:var(--brand-bright)}
+.btn.primary:disabled{opacity:.5;cursor:default}
+.btn.ghost{color:var(--muted)}
+.dfoot .ttf{margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.dfoot .ttf b{color:var(--ink);font-weight:700}
+
+/* verified banner */
+.verified{display:none;align-items:center;gap:10px;background:var(--met-wash);border:1px solid var(--met-line);border-radius:11px;padding:11px 14px;margin-top:14px;font-size:13px}
+.verified.show{display:flex}
+.verified .ic{width:20px;height:20px;color:var(--met);flex-shrink:0}
+.verified b{color:var(--brand-ink)}
+
+/* legend / why */
+.why{margin-top:22px;display:grid;grid-template-columns:1.3fr 1fr;gap:16px}
+@media(max-width:900px){.why{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 17px;box-shadow:var(--shadow-sm)}
+.card h3{margin:0 0 8px;font-size:13px;letter-spacing:.02em;display:flex;align-items:center;gap:8px}
+.card h3 .d{width:7px;height:7px;border-radius:50%;background:var(--brand-bright)}
+.card p{margin:0 0 9px;font-size:13px;color:var(--muted);line-height:1.6}
+.card p b{color:var(--ink);font-weight:650}
+.card ul{margin:0;padding-left:18px;font-size:12.5px;color:var(--muted);line-height:1.65}
+.card li{margin-bottom:5px}
+.card li b{color:var(--ink);font-weight:650}
+
+/* footer */
+.foot{margin-top:26px;padding-top:18px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.foot .made{font-size:13px;color:var(--muted)}
+.foot .made b{color:var(--ink);font-weight:700}
+.foot .made a{color:var(--brand-ink);font-weight:600}
+.foot .disc{font-size:11px;color:var(--faint);max-width:56ch;line-height:1.5}
+
+.srcnote{font-family:var(--mono);font-size:9.5px;color:var(--faint);letter-spacing:.02em;margin-top:2px}
+.hl{color:var(--brand-ink);font-weight:650}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- masthead -->
+  <div class="mast">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 2.5 3.5 6v6c0 4.6 3.4 8 8.5 9.5 5.1-1.5 8.5-4.9 8.5-9.5V6L12 2.5Z" stroke="#04140d" stroke-width="1.6" fill="rgba(0,0,0,.12)"/><path d="M8.4 12.2l2.5 2.5 4.7-5" stroke="#04140d" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div>
+        <div class="bt">HiddenLayer · AISec</div>
+        <div class="bs">ATLAS → Shipped — detection-to-fix tracker</div>
+      </div>
+    </div>
+    <div class="grow"></div>
+    <div class="pill"><span class="g"></span> AIDR runtime <span style="color:var(--faint)">·</span> live queue</div>
+    <div class="tframe" role="group" aria-label="Theme">
+      <button id="thAuto" aria-pressed="true" onclick="setTheme('auto')">Auto</button>
+      <button id="thLight" aria-pressed="false" onclick="setTheme('light')">Light</button>
+      <button id="thDark" aria-pressed="false" onclick="setTheme('dark')">Dark</button>
+    </div>
+  </div>
+
+  <!-- hero framing -->
+  <div class="hero">
+    <div class="kick">Technical Product · AI Security</div>
+    <h1>A model-security engine fired. Now <em>a human who is not an ML engineer</em> has to ship a fix.</h1>
+    <p class="lede">
+      HiddenLayer's <b>AIDR</b> maps every detection to a <b>MITRE ATLAS</b> technique — severity, hashes, tactic and
+      technique IDs. That's exactly right for a red team. But the person who has to <b>act</b> on it is often a SOC
+      analyst on a defender team that has never trained a model. The distance between <b>“AML.T0051 fired”</b> and
+      <b>“the customer shipped a fix”</b> is where trust — and renewal — is won or lost. This walks one detection down
+      that path: <b>raw signal → plain-language translation → a reversible decision → the fix that ships → time-to-fix.</b>
+      Pick a detection to trace it.
+    </p>
+
+    <div class="bench" aria-label="Context">
+      <div class="bc b1"><div class="n">64+</div><div class="l">Adversarial AI tactics &amp; techniques AIDR maps to MITRE ATLAS &amp; OWASP LLM</div><div class="src">HiddenLayer AISec datasheet</div></div>
+      <div class="bc b2"><div class="n">1 in 8</div><div class="l">AI breaches now linked to agentic systems — new ATLAS territory (T0086 / T0110)</div><div class="src">HiddenLayer, published</div></div>
+      <div class="bc b3"><div class="n">71%</div><div class="l">of orgs report increased or sustained attacks on their AI systems</div><div class="src">HiddenLayer, published</div></div>
+      <div class="bc b4"><div class="n">Vectorized</div><div class="l">AIDR observes only vectorized inputs — no access to your data, features, or model</div><div class="src">HiddenLayer, patented</div></div>
+    </div>
+  </div>
+
+  <!-- console -->
+  <div class="console">
+    <div class="cbar">
+      <div class="ct"><span class="dot"></span> Detection queue → fix tracker</div>
+      <span class="chip">Workspace: <span class="mono">acme-fs / prod</span></span>
+      <span class="chip live" id="liveChip">● 5 detections</span>
+      <div class="grow"></div>
+      <div class="seg" role="group" aria-label="Legibility view">
+        <button id="vSoc" aria-pressed="true" onclick="setView('soc')">SOC view</button>
+        <button id="vMl" aria-pressed="false" onclick="setView('ml')">ML view</button>
+      </div>
+    </div>
+
+    <div class="split">
+      <!-- left rail: queue -->
+      <div class="rail">
+        <div class="railh">
+          <span class="t">Open + tracked</span>
+          <span class="t" id="qcount">5 shown</span>
+        </div>
+        <div class="filters" id="filters">
+          <button class="fbtn" data-f="all" aria-pressed="true" onclick="setFilter('all')">All sources</button>
+          <button class="fbtn" data-f="AIDR" aria-pressed="false" onclick="setFilter('AIDR')">AIDR</button>
+          <button class="fbtn" data-f="Scanner" aria-pressed="false" onclick="setFilter('Scanner')">Model Scanner</button>
+          <button class="fbtn" data-f="RedTeam" aria-pressed="false" onclick="setFilter('RedTeam')">Red Teaming</button>
+        </div>
+        <div class="queue" id="queue"></div>
+        <div class="railfoot">
+          <div class="rf"><div class="n" id="mttr">—</div><div class="l">Median time-to-fix, shipped</div></div>
+          <div class="rf"><div class="n" id="shipn">—</div><div class="l">Detections with a fix shipped</div></div>
+        </div>
+      </div>
+
+      <!-- right: detail -->
+      <div class="detail" id="detail"><!-- rendered by JS --></div>
+    </div>
+  </div>
+
+  <!-- why this maps to the product / to her -->
+  <div class="why">
+    <div class="card">
+      <h3><span class="d"></span> Why this is the product problem, not a feature</h3>
+      <p>
+        HiddenLayer's edge is coverage: AIDR, <b>Model Scanner</b>, and <b>Automated Red Teaming</b> surface adversarial
+        activity across the MLOps pipeline and tag it to ATLAS. The unsolved part is <b>the last mile</b> — turning a
+        technique ID into a decision a non-ML defender can make and a fix an owner can ship, with the clock visible the
+        whole way. Get that right and the platform's findings become <b>operational</b> instead of merely correct.
+      </p>
+      <ul>
+        <li><b>Legibility toggle</b> — the same detection, read as a SOC analyst vs. an ML engineer. The translation is the product surface a TPM owns.</li>
+        <li><b>Human-in-the-loop by default</b> — every response is reversible and logged; auto-remediate is a deliberate, bounded choice, not the silent default.</li>
+        <li><b>Time-to-fix as the north-star metric</b> — detection accuracy is table stakes; MTTR is what a security buyer renews on.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3><span class="d"></span> Why Shrutika built this one</h3>
+      <p>
+        Two pieces of her work map straight onto this: at <b>Capital Market Solutions</b> she designed <b>RSMS</b>, a
+        regulatory-surveillance console where compliance teams monitor, investigate, and <b>resolve exceptions</b> in a
+        single view — <b>manual reporting errors down 25%</b>. That's the exception-to-resolution spine here.
+      </p>
+      <p>
+        And at <b>Innovation Hacks</b> she designed the <b>human-in-the-loop</b> for an autonomous remediation system —
+        the reasoning surfaces and the one-click, reversible override that made every autonomous action <b>visible,
+        reversible, explainable</b> (response time <b>41 min → under 5</b>). That thesis is the decision stage above.
+      </p>
+      <p class="srcnote">Her role: product designer &amp; systems/financial modeler — she designed these surfaces; she did not build the underlying engines.</p>
+    </div>
+  </div>
+
+  <!-- footer -->
+  <div class="foot">
+    <div class="made">Made by <b>Shrutika Rajput</b> — <a href="https://shrutikarajput.com">shrutikarajput.com</a></div>
+    <div class="disc">
+      Product surfaces, capabilities, and MITRE ATLAS technique IDs are real (HiddenLayer AISec datasheet, docs, and
+      published ATLAS matrix). Detection instances, customer workspace, timestamps, and confidence scores are
+      <b>illustrative</b> — built to show how the product’s real workflow would run. Industry figures are HiddenLayer’s
+      own published numbers.
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ============================================================
+   Data — real ATLAS techniques + real HiddenLayer product surfaces.
+   Detection instances are illustrative (labeled in footer).
+   ============================================================ */
+const SRC = {
+  AIDR:{name:'AI Detection & Response', short:'AIDR · runtime', tag:'AIDR'},
+  Scanner:{name:'Model Scanner', short:'Model Scanner · CI', tag:'Scanner'},
+  RedTeam:{name:'Automated Red Teaming', short:'Automated Red Teaming', tag:'RedTeam'}
+};
+
+const DETECTIONS = [
+  {
+    id:'DET-4471', source:'AIDR', severity:'crit', status:'open', confidence:0.94,
+    technique:'AML.T0051', sub:'.001 Indirect', techName:'LLM Prompt Injection', tactic:'Initial Access',
+    owasp:'LLM01: Prompt Injection', asset:'claims-copilot (prod LLM gateway)', seen:'2m ago',
+    title:'Indirect prompt injection in a retrieved document told the assistant to exfiltrate data',
+    baselineRisk:88,
+    // ML / raw signal view
+    ml:{
+      vector:'Inbound prompt embedding flagged by AIDR behavioral cluster #inj-idr-07',
+      score:'anomaly 0.94 · PII-egress intent signal present',
+      hash:'sha256:9f2c4e…a17b',
+      detail:'Retrieved-context span matched indirect-injection pattern; instruction-override + external-egress tokens co-occur. No user-authored injection; payload originated in an ingested PDF.'
+    },
+    // SOC / translated view
+    soc:{
+      means:'A document your assistant read told it to ignore its rules and quietly send data out. The customer did not type this — the file did.',
+      risk:'Customer PII and your system prompt could be sent to an attacker-controlled address. This is regulated data on a production assistant.',
+      next:'Block this input pattern at the gateway (AIDR block mode), then quarantine the source document from the retrieval index.'
+    },
+    options:[
+      {lbl:'Enforce AIDR guardrail policy at the gateway (block mode)', desc:'AIDR blocks the injection pattern inline before it reaches the LLM; quarantine the source PDF from retrieval.', chan:'Ships via: AIDR runtime policy · API gateway', residual:9, ttf:34, rec:true},
+      {lbl:'Alert-only + manual review of the assistant session', desc:'Route to the on-call analyst; assistant keeps serving traffic while a human reviews.', chan:'Ships via: SIEM/SOAR ticket', residual:52, ttf:190, rec:false},
+      {lbl:'Take claims-copilot offline pending investigation', desc:'Hard stop. Zero residual exposure, but the production assistant is down for every customer.', chan:'Ships via: gateway kill-switch', residual:2, ttf:12, rec:false}
+    ],
+    remediation:{
+      ships:'A tuned <b>AIDR guardrail policy</b> is enforced at the API gateway in block mode for the indirect-injection pattern, and the poisoned PDF is pulled from the retrieval index and flagged in threat intel.',
+      owner:'SOC on-call → Platform (LLM gateway)', channel:'AIDR runtime policy · API gateway', window:'same shift'
+    },
+    verify:{how:'Replayed the exact payload through Automated Red Teaming — blocked at gateway, no egress. Session re-scanned clean.', label:'Red-team replay: blocked'}
+  },
+  {
+    id:'DET-4468', source:'AIDR', severity:'high', status:'prog', confidence:0.89,
+    technique:'AML.T0057', sub:'', techName:'LLM Data Leakage', tactic:'Exfiltration',
+    owasp:'LLM06: Sensitive Information Disclosure', asset:'support-agent (prod)', seen:'19m ago',
+    title:'Support assistant returned account PII in a response it should have masked',
+    baselineRisk:71,
+    ml:{
+      vector:'Output-side AIDR monitor flagged PII entities in generated response',
+      score:'anomaly 0.89 · 3 PII entity types (SSN-last4, DOB, balance)',
+      hash:'sha256:1b70d9…44e1',
+      detail:'Model returned structured customer fields verbatim from context. No injection detected inbound; this is over-disclosure at generation time.'
+    },
+    soc:{
+      means:'Your support bot answered a normal question but pasted the customer’s private details into the reply where it shouldn’t have.',
+      risk:'Sensitive personal data left the boundary in plain text. Depending on channel, it may already be in a transcript or email.',
+      next:'Turn on the AIDR output filter for PII so responses are redacted before they leave the model.'
+    },
+    options:[
+      {lbl:'Enable AIDR output redaction policy for PII entities', desc:'AIDR masks SSN/DOB/balance in generated output before return; back-fill scan of recent transcripts.', chan:'Ships via: AIDR runtime policy (egress)', residual:12, ttf:58, rec:true},
+      {lbl:'Tighten the system prompt to forbid raw PII', desc:'Prompt-level guardrail only. Cheaper, but prompt controls are bypassable and unverified.', chan:'Ships via: prompt config', residual:44, ttf:40, rec:false},
+      {lbl:'Accept and monitor', desc:'Log as known behavior, watch frequency. No control shipped.', chan:'Ships via: telemetry watch', residual:68, ttf:0, rec:false}
+    ],
+    remediation:{
+      ships:'An <b>AIDR egress redaction policy</b> masks the flagged PII entity types before any response leaves the model, plus a back-fill scan of the last 24h of transcripts for prior disclosures.',
+      owner:'SOC → Support Platform', channel:'AIDR runtime policy (egress)', window:'in progress'
+    },
+    verify:{how:'Output monitor shows 0 PII entities egressing post-policy across 1,400 sampled responses.', label:'Egress monitor: clean'}
+  },
+  {
+    id:'DET-4455', source:'AIDR', severity:'high', status:'open', confidence:0.83,
+    technique:'AML.T0024', sub:'', techName:'Exfiltration via ML Inference API', tactic:'Exfiltration',
+    owasp:'—', asset:'fraud-scoring-v7 (prod ML model)', seen:'1h ago',
+    title:'High-volume boundary probing of the fraud model — looks like model extraction',
+    baselineRisk:64,
+    ml:{
+      vector:'AIDR inference-monitor flagged systematic decision-boundary probing from a single principal',
+      score:'anomaly 0.83 · 41k near-duplicate queries / 20 min · gradient-style spacing',
+      hash:'sha256:7ac0f2…9db3',
+      detail:'Query distribution matches model-extraction reconnaissance (AML.T0040 access → T0024 exfil), not organic traffic. IP theft risk to a proprietary fraud model.'
+    },
+    soc:{
+      means:'Someone is hammering your fraud model with tiny variations to reverse-engineer how it decides — essentially trying to clone it or map its blind spots.',
+      risk:'This model is proprietary IP and it stops fraud. If they learn its boundary, they can both steal it and evade it.',
+      next:'Rate-limit and step-up-auth that principal at the inference gateway; AIDR keeps scoring the probing pattern.'
+    },
+    options:[
+      {lbl:'AIDR model-theft response: throttle + step-up auth on the principal', desc:'Rate-limit the probing principal and require step-up auth; AIDR continues scoring the extraction pattern.', chan:'Ships via: AIDR response · inference gateway', residual:18, ttf:47, rec:true},
+      {lbl:'Block the principal outright', desc:'Immediate cutoff. Effective, but risks blocking a mislabeled legitimate batch job.', chan:'Ships via: gateway ACL', residual:8, ttf:20, rec:false},
+      {lbl:'Watch and gather for attribution', desc:'Keep serving to collect evidence for threat intel before acting. Highest exposure.', chan:'Ships via: telemetry watch', residual:60, ttf:0, rec:false}
+    ],
+    remediation:{
+      ships:'An <b>AIDR model-theft response</b> throttles the probing principal and forces step-up auth at the inference gateway; the pattern is added to threat intel and watched for return under new credentials.',
+      owner:'SOC → Fraud ML Platform', channel:'AIDR response · inference gateway', window:'this shift'
+    },
+    verify:{how:'Probing volume from the principal drops 96%; no successful boundary-mapping run completes post-throttle.', label:'Probing suppressed'},
+    note:'Modeled on HiddenLayer’s published financial-services case: a global customer with 50M+ users and 5B+ transactions/yr red-teamed its fraud-detection ML models.'
+  },
+  {
+    id:'SCAN-2093', source:'Scanner', severity:'crit', status:'open', confidence:0.99,
+    technique:'AML.T0015', sub:'', techName:'Evade ML Model (backdoor)', tactic:'ML Attack Staging',
+    owasp:'—', asset:'sentiment-encoder (Hugging Face import → CI)', seen:'staged in CI',
+    title:'A third-party model pulled from Hugging Face contains a backdoor / unsafe payload',
+    baselineRisk:92,
+    ml:{
+      vector:'Model Scanner flagged a serialized-object payload + anomalous layer during pre-deploy scan',
+      score:'malware/backdoor signature match · integrity check failed',
+      hash:'sha256:c41e88…0f52',
+      detail:'Pickle-embedded operator + trigger-conditioned layer. Model genealogy shows this weight diverges from the upstream lineage of record. Would execute on load.'
+    },
+    soc:{
+      means:'A model your team downloaded to use has hidden code baked in — it can misbehave on a secret trigger or run code the moment it loads. It has not shipped yet; it’s waiting in the build.',
+      risk:'If this reaches production it’s a backdoor inside your pipeline. The safe move is to stop it in CI before deploy.',
+      next:'Fail the CI build (GitHub Actions), roll the dependency back to the last clean model in genealogy, and open an AIBOM finding.'
+    },
+    options:[
+      {lbl:'Fail the build + roll back to last clean genealogy', desc:'Model Scanner gate fails the GitHub Actions build; pin to the last integrity-verified version; AIBOM finding raised.', chan:'Ships via: Model Scanner CI gate · Model Genealogy', residual:4, ttf:26, rec:true},
+      {lbl:'Quarantine the artifact, keep the pipeline running on current prod', desc:'Isolate the bad weight; prod stays on the previous good model while the team sources a clean replacement.', chan:'Ships via: registry quarantine', residual:15, ttf:35, rec:false},
+      {lbl:'Override the gate to unblock a release', desc:'Waive the finding to hit a deadline. Ships a known backdoor. Requires sign-off.', chan:'Ships via: manual override', residual:90, ttf:5, rec:false}
+    ],
+    remediation:{
+      ships:'The <b>Model Scanner CI gate</b> fails the GitHub Actions build; the dependency is pinned back to the last integrity-verified model via <b>Model Genealogy</b>, and an <b>AIBOM</b> finding documents the supply-chain source.',
+      owner:'SOC → ML Platform / AppSec', channel:'Model Scanner CI gate · Model Genealogy', window:'blocks deploy'
+    },
+    verify:{how:'Re-scan of the pinned model passes with clean integrity; AIBOM shows no unresolved supply-chain findings on the release.', label:'Clean re-scan'}
+  },
+  {
+    id:'RT-0177', source:'RedTeam', severity:'med', status:'open', confidence:0.77,
+    technique:'AML.T0110', sub:'', techName:'AI Agent Tool Poisoning', tactic:'Execution',
+    owasp:'LLM07: System Prompt Leakage / Excessive Agency', asset:'ops-agent (MCP tools)', seen:'red-team run #218',
+    title:'Automated Red Teaming got the MCP agent to call an unsafe tool via a poisoned tool description',
+    baselineRisk:58,
+    ml:{
+      vector:'Red-team playbook #agentic-mcp reached a success state: unsafe tool invocation',
+      score:'attack success 1/1 on scenario · guardrail bypass confirmed',
+      hash:'run:rt-0177 · scenario:mcp-tool-poison',
+      detail:'A crafted tool description in the MCP server steered the agent into a destructive tool call the guardrail was meant to block. Found in simulation — not exploited in prod.'
+    },
+    soc:{
+      means:'In a safe simulation, our own red-team tool tricked the agent into using a dangerous tool it shouldn’t. Nothing broke in production — we found it first.',
+      risk:'If a real attacker poisoned a tool description the same way, the agent could take a harmful action on its own. This is the new agentic attack surface.',
+      next:'Harden the agent’s system prompt + tool allow-list, add an AIDR guardrail on tool calls, then re-run the red-team scenario to confirm it’s closed.'
+    },
+    options:[
+      {lbl:'Harden tool allow-list + AIDR guardrail on tool calls, then re-test', desc:'Constrain callable tools, add a runtime guardrail on tool invocations, and re-run scenario #218 to verify closure.', chan:'Ships via: agent policy · AIDR · Red-team re-run', residual:14, ttf:120, rec:true},
+      {lbl:'Patch the system prompt only', desc:'Fast prompt fix. Reduces success rate but leaves the tool surface itself unconstrained.', chan:'Ships via: prompt config', residual:41, ttf:45, rec:false},
+      {lbl:'Log as accepted risk (simulation-only)', desc:'Since it’s not exploited in prod, defer. Leaves the bypass live for a real attacker.', chan:'Ships via: backlog', residual:58, ttf:0, rec:false}
+    ],
+    remediation:{
+      ships:'The agent’s <b>tool allow-list</b> is constrained and an <b>AIDR guardrail</b> is added on tool invocations; red-team <b>scenario #218 is re-run</b> and must fail before the fix is marked shipped.',
+      owner:'SOC → Agent Platform', channel:'Agent policy · AIDR · Automated Red Teaming', window:'this week'
+    },
+    verify:{how:'Automated Red Teaming re-runs scenario #218 across 50 variants — 0 successful unsafe tool calls.', label:'Red-team re-run: 0/50'}
+  }
+];
+
+const STAGES = [
+  {key:'detected', lb:'Detected', sub:'Signal'},
+  {key:'triaged', lb:'Triaged', sub:'Translate'},
+  {key:'decided', lb:'Decision', sub:'Choose'},
+  {key:'remedy', lb:'Remediation', sub:'Ship'},
+  {key:'shipped', lb:'Shipped', sub:'Verify'}
+];
+
+/* ---------- UI state ---------- */
+let state = {
+  view:'soc',        // 'soc' | 'ml'
+  filter:'all',
+  selected:'DET-4471',
+  // per-detection progress: stageIndex, chosen option idx, oversight mode
+  prog:{}
+};
+DETECTIONS.forEach(d=>{
+  const rec = d.options.findIndex(o=>o.rec);
+  state.prog[d.id] = {
+    stage: d.status==='prog' ? 2 : 0,
+    opt: rec<0?0:rec,
+    oversight:'hitl',
+    shipped: false,
+    elapsed: d.status==='prog'? 22 : 0   // illustrative minutes accrued
+  };
+});
+
+/* ---------- theme ---------- */
+function setTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  ['Auto','Light','Dark'].forEach(x=>{
+    document.getElementById('th'+x).setAttribute('aria-pressed', String(x.toLowerCase()===t));
+  });
+}
+function setView(v){
+  state.view=v;
+  document.getElementById('vSoc').setAttribute('aria-pressed',String(v==='soc'));
+  document.getElementById('vMl').setAttribute('aria-pressed',String(v==='ml'));
+  render();
+}
+function setFilter(f){
+  state.filter=f;
+  document.querySelectorAll('#filters .fbtn').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.f===f)));
+  const list=visible();
+  if(!list.find(d=>d.id===state.selected) && list.length) state.selected=list[0].id;
+  render();
+}
+function visible(){
+  return DETECTIONS.filter(d=> state.filter==='all' || d.source===state.filter);
+}
+
+/* ---------- helpers ---------- */
+const ic = {
+  bolt:'<svg viewBox="0 0 24 24" fill="none"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>',
+  eye:'<svg viewBox="0 0 24 24" fill="none"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6"/></svg>',
+  warn:'<svg viewBox="0 0 24 24" fill="none"><path d="M12 3 2 20h20L12 3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 9v5M12 17h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  arrow:'<svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none"><path d="M4 12.5 9 17.5 20 6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  small:'<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>'
+};
+function sevWord(s){return {crit:'Critical',high:'High',med:'Medium',low:'Low'}[s]||s;}
+function riskColor(r){ if(r>=66)return 'var(--crit)'; if(r>=34)return 'var(--high)'; if(r>=15)return 'var(--med)'; return 'var(--met)'; }
+function fmtMins(m){ if(m<=0)return '0m'; if(m<60)return m+'m'; const h=Math.floor(m/60),mm=m%60; return h+'h'+(mm?(' '+mm+'m'):''); }
+
+/* residual risk given chosen option + oversight mode.
+   Human-in-the-loop trims a little residual risk (a human catches edge cases)
+   but costs time; auto-remediate is faster but slightly higher residual. */
+function computeResidual(d,p){
+  const o=d.options[p.opt];
+  let r=o.residual;
+  if(p.oversight==='hitl') r=Math.max(1,r-4);
+  else r=Math.min(99,r+3);
+  return r;
+}
+function computeTTF(d,p){
+  const o=d.options[p.opt];
+  let t=o.ttf;
+  if(p.oversight==='hitl') t=Math.round(t*1.35+8);   // review adds latency
+  else t=Math.round(t*0.6);                            // auto is faster
+  return t;
+}
+
+/* ---------- rollup metrics ---------- */
+function refreshRollup(){
+  const shipped = DETECTIONS.filter(d=>state.prog[d.id].shipped);
+  document.getElementById('shipn').textContent = shipped.length + ' / ' + DETECTIONS.length;
+  if(shipped.length){
+    const ttfs = shipped.map(d=>computeTTF(d,state.prog[d.id])).sort((a,b)=>a-b);
+    const mid = ttfs[Math.floor((ttfs.length-1)/2)];
+    document.getElementById('mttr').textContent = fmtMins(mid);
+  } else {
+    document.getElementById('mttr').textContent = '—';
+  }
+  const list=visible();
+  document.getElementById('qcount').textContent = list.length+' shown';
+  document.getElementById('liveChip').textContent = '● '+DETECTIONS.filter(d=>!state.prog[d.id].shipped).length+' open';
+}
+
+/* ---------- render queue ---------- */
+function renderQueue(){
+  const q=document.getElementById('queue');
+  q.innerHTML='';
+  visible().forEach(d=>{
+    const p=state.prog[d.id];
+    const st = p.shipped?'ship':(p.stage>0?'prog':'open');
+    const stLb = p.shipped?'Shipped':(p.stage>0?'In progress':'Open');
+    const btn=document.createElement('button');
+    btn.className='qcard';
+    btn.setAttribute('aria-current',String(d.id===state.selected));
+    btn.onclick=()=>{state.selected=d.id;render();};
+    btn.innerHTML=`
+      <div class="qtop">
+        <span class="tech mono">${d.technique}${d.sub?'<span style="opacity:.6">'+d.sub+'</span>':''}</span>
+        <span class="sev ${d.severity}">${sevWord(d.severity)}</span>
+      </div>
+      <div class="qname">${d.title}</div>
+      <div class="qmeta">
+        <span class="src">${SRC[d.source].short}</span>
+        <span style="color:var(--faint)">·</span>
+        <span class="qstatus ${st}">${stLb}</span>
+      </div>`;
+    q.appendChild(btn);
+  });
+}
+
+/* ---------- render detail ---------- */
+function renderDetail(){
+  const d=DETECTIONS.find(x=>x.id===state.selected);
+  const p=state.prog[d.id];
+  const el=document.getElementById('detail');
+  const stageIdx = p.shipped?4:p.stage;
+
+  // stepper
+  let steps='';
+  STAGES.forEach((s,i)=>{
+    const cls = i<stageIdx?'done':(i===stageIdx?'active':'');
+    const bead = i<stageIdx?ic.check:(i===stageIdx?ic.small:'');
+    steps+=`<div class="step ${cls}" onclick="gotoStage('${d.id}',${i})">
+      <div class="line"></div>
+      <div class="bead">${bead}</div>
+      <div class="lb">${s.lb}</div>
+      <div class="sub">${s.sub}</div>
+    </div>`;
+  });
+
+  // body per stage
+  let body='';
+  if(stageIdx===0) body=stageDetected(d);
+  else if(stageIdx===1) body=stageTriaged(d);
+  else if(stageIdx===2) body=stageDecision(d,p);
+  else if(stageIdx===3) body=stageRemedy(d,p);
+  else body=stageShipped(d,p);
+
+  const residual=computeResidual(d,p);
+  const ttf=computeTTF(d,p);
+
+  // footer controls
+  const atStart = stageIdx===0;
+  const atEnd = stageIdx>=4;
+  const nextLbl = ['See the translation','Go to decision','Ship the fix','Mark shipped','Shipped'][stageIdx];
+
+  el.innerHTML=`
+    <div class="dhead">
+      <div class="idcol">
+        <div class="did mono">${d.id} · detected ${d.seen} · confidence ${(d.confidence*100).toFixed(0)}%</div>
+        <h2>${d.title}</h2>
+        <div class="tags">
+          <span class="tag atlas"><b>${d.technique}${d.sub||''}</b> ${d.techName}</span>
+          <span class="tag">Tactic <b>${d.tactic}</b></span>
+          <span class="tag">Source <b>${SRC[d.source].name}</b></span>
+          ${d.owasp!=='—'?`<span class="tag">${d.owasp}</span>`:''}
+          <span class="tag">Asset <b>${d.asset}</b></span>
+        </div>
+      </div>
+      <span class="sev ${d.severity}" style="font-size:11px;padding:5px 11px">${sevWord(d.severity)}</span>
+    </div>
+
+    <div class="stepper">${steps}</div>
+
+    ${body}
+
+    <div class="verified ${atEnd?'show':''}">
+      <span class="ic">${ic.check}</span>
+      <div><b>Fix shipped &amp; verified.</b> ${d.verify.how}</div>
+    </div>
+
+    <div class="dfoot">
+      <button class="btn ghost" onclick="stepBack('${d.id}')" ${atStart?'disabled':''}>← Back</button>
+      <button class="btn primary" onclick="stepFwd('${d.id}')" ${atEnd?'disabled':''}>${nextLbl} ${atEnd?'':ic.arrow}</button>
+      <button class="btn ghost" onclick="resetDet('${d.id}')">Reset</button>
+      <div class="ttf">
+        <span>residual risk <b style="color:${riskColor(residual)}">${residual}%</b></span>
+        <span style="color:var(--faint)">·</span>
+        <span>time-to-fix <b>${fmtMins(ttf)}</b></span>
+      </div>
+    </div>
+  `;
+}
+
+/* --- stage bodies --- */
+function stageDetected(d){
+  const isMl = state.view==='ml';
+  if(isMl){
+    return `<div class="panelwrap"><div class="panel">
+      <div class="ph"><div class="pt">${ic.eye}<span>Raw signal</span> <span class="nm">ML-engineer view</span></div>
+        <span class="chip mono">${d.technique}</span></div>
+      <div class="pb">
+        <div class="kv">
+          <div class="row"><div class="k">Detector</div><div class="v">${d.ml.vector}</div></div>
+          <div class="row"><div class="k">Score</div><div class="v mono">${d.ml.score}</div></div>
+          <div class="row"><div class="k">Artifact hash</div><div class="v mono">${d.ml.hash}</div></div>
+          <div class="row"><div class="k">Analysis</div><div class="v">${d.ml.detail}</div></div>
+        </div>
+        <div class="telemetry"><span class="lbl">atlas.technique</span> = <span class="val">"${d.technique}${d.sub||''} — ${d.techName}"</span><br>
+        <span class="lbl">atlas.tactic</span> = <span class="val">"${d.tactic}"</span><br>
+        <span class="lbl">severity</span> = <span class="val">"${sevWord(d.severity)}"</span> · <span class="lbl">confidence</span> = <span class="val">${d.confidence.toFixed(2)}</span></div>
+      </div></div>
+      <div class="panel"><div class="ph"><div class="pt">${ic.warn}<span>Why this is not yet actionable for a defender</span></div></div>
+      <div class="pb"><p style="margin:0;font-size:13.5px;color:var(--muted);line-height:1.6">This is precise and correct — and to a SOC analyst who has never trained a model, it is a technique ID and an anomaly score. The next stage is the product’s real job: <b style="color:var(--ink)">turn this into a decision they can make.</b> Flip to <span class="hl">SOC view</span> to see the same detection translated.</p></div></div>
+    </div>`;
+  }
+  return `<div class="panelwrap"><div class="panel">
+    <div class="ph"><div class="pt">${ic.eye}<span>What fired</span> <span class="nm">SOC-analyst view</span></div>
+      <span class="chip mono">${d.technique} · ${sevWord(d.severity)}</span></div>
+    <div class="pb"><p style="margin:0;font-size:14.5px;line-height:1.55">${d.soc.means}</p>
+      <div style="margin-top:12px;font-family:var(--mono);font-size:11px;color:var(--faint);letter-spacing:.02em">
+        Under the hood: ${d.ml.vector.toLowerCase()} · flip to <span class="hl">ML view</span> for the raw signal, hash &amp; score.</div>
+    </div></div></div>`;
+}
+function stageTriaged(d){
+  const isMl=state.view==='ml';
+  return `<div class="panelwrap"><div class="panel">
+    <div class="ph"><div class="pt">${ic.bolt}<span>Translation</span> <span class="nm">${isMl?'ML context + defender decision':'decision-ready'}</span></div>
+      <span class="chip">the surface a TPM owns</span></div>
+    <div class="pb">
+      <div class="two">
+        <div class="trans">
+          <div class="tcard"><div class="h"><span class="ic">${ic.eye}</span>What it means</div><p>${d.soc.means}</p></div>
+          <div class="tcard risk"><div class="h"><span class="ic">${ic.warn}</span>What’s at risk</div><p>${d.soc.risk}</p></div>
+          <div class="tcard act"><div class="h"><span class="ic">${ic.arrow}</span>Recommended next click</div><p>${d.soc.next}</p></div>
+        </div>
+        <div>
+          <div class="telemetry" style="margin-top:0"><span class="lbl">MITRE ATLAS</span><br>
+            <span class="val">${d.technique}${d.sub||''}</span> — ${d.techName}<br>
+            <span style="color:var(--faint)">tactic:</span> ${d.tactic}${d.owasp!=='—'?'<br><span style="color:var(--faint)">owasp:</span> '+d.owasp:''}<br>
+            <span style="color:var(--faint)">detected by:</span> ${SRC[d.source].name}
+          </div>
+          ${isMl?`<div class="telemetry"><span class="lbl">signal</span><br>${d.ml.detail}</div>`:''}
+          ${d.note?`<div class="tcard" style="margin-top:11px;background:var(--info-wash);border-color:var(--info-line)"><div class="h" style="color:var(--info)">Grounded in a real case</div><p style="font-size:12.5px">${d.note}</p></div>`:''}
+        </div>
+      </div>
+    </div></div></div>`;
+}
+function stageDecision(d,p){
+  let opts='';
+  d.options.forEach((o,i)=>{
+    opts+=`<button class="opt" aria-pressed="${i===p.opt}" onclick="chooseOpt('${d.id}',${i})">
+      <span class="rad"></span>
+      <span><span class="lbl">${o.lbl}</span>${o.rec?' <span class="rec">recommended</span>':''}<span class="desc">${o.desc}</span><span class="chan mono">${o.chan}</span></span>
+      <span class="rc"><span class="m" style="color:${riskColor(o.residual)}">${o.residual}%</span><span class="ml">residual</span><span class="m" style="margin-top:4px">${fmtMins(o.ttf)}</span><span class="ml">base TTF</span></span>
+    </button>`;
+  });
+  const over=p.oversight;
+  const overNote = over==='hitl'
+    ? 'Every response is <b>reversible and logged</b>. A human confirms before the control takes effect — a few minutes slower, and edge cases get caught. This is the default for a production, regulated surface.'
+    : '<b>AIDR applies the control inline</b>, no human in the path — fastest containment, slightly higher residual. Appropriate for high-confidence, low-blast-radius patterns; still fully logged and reversible.';
+  return `<div class="panelwrap"><div class="panel">
+    <div class="ph"><div class="pt">${ic.bolt}<span>Decision</span> <span class="nm">human-in-the-loop</span></div>
+      <span class="chip">choose the response that ships</span></div>
+    <div class="pb">
+      <div class="opts">${opts}</div>
+      <div class="oversight">
+        <div class="oh"><div class="t">Oversight mode</div>
+          <div class="tog" data-on="${over}" role="switch" aria-checked="${over==='auto'}" onclick="toggleOversight('${d.id}')">
+            <div class="k"></div><span class="a">HITL</span><span class="b">Auto</span>
+          </div></div>
+        <div class="note">${overNote}</div>
+      </div>
+    </div></div></div>`;
+}
+function stageRemedy(d,p){
+  const o=d.options[p.opt];
+  const residual=computeResidual(d,p);
+  const ttf=computeTTF(d,p);
+  return `<div class="panelwrap"><div class="panel">
+    <div class="ph"><div class="pt">${ic.arrow}<span>Remediation</span> <span class="nm">the fix a customer ships</span></div>
+      <span class="chip mono">${o.chan.replace('Ships via: ','')}</span></div>
+    <div class="pb">
+      <div class="rem">
+        <div class="rembox"><div class="rl">What ships</div><div class="rv">${d.remediation.ships}</div></div>
+        <div class="remmeta">
+          <div class="mm"><div class="k">Owner</div><div class="v" style="font-size:12.5px">${d.remediation.owner}</div></div>
+          <div class="mm"><div class="k">Ships via</div><div class="v" style="font-size:12.5px">${d.remediation.channel}</div></div>
+          <div class="mm"><div class="k">Oversight</div><div class="v" style="font-size:12.5px;color:${p.oversight==='hitl'?'var(--brand-ink)':'var(--high)'}">${p.oversight==='hitl'?'Human-in-the-loop':'Auto-remediate'}</div></div>
+        </div>
+        <div class="meter">
+          <div class="mt"><span class="lbl">Residual risk after this fix</span><span class="pct" style="color:${riskColor(residual)}">${residual}%</span></div>
+          <div class="bar"><i style="width:${residual}%;background:${riskColor(residual)}"></i></div>
+          <div class="barlabels"><span>from ${d.baselineRisk}% at detection</span><span>projected time-to-fix ${fmtMins(ttf)}</span></div>
+        </div>
+      </div>
+    </div></div></div>`;
+}
+function stageShipped(d,p){
+  const residual=computeResidual(d,p);
+  const ttf=computeTTF(d,p);
+  const o=d.options[p.opt];
+  return `<div class="panelwrap"><div class="panel">
+    <div class="ph"><div class="pt">${ic.check}<span>Shipped &amp; verified</span> <span class="nm">closed loop</span></div>
+      <span class="chip live">${d.verify.label}</span></div>
+    <div class="pb">
+      <div class="remmeta" style="grid-template-columns:repeat(3,1fr)">
+        <div class="mm"><div class="k">Time-to-fix</div><div class="v" style="color:var(--brand-ink)">${fmtMins(ttf)}</div></div>
+        <div class="mm"><div class="k">Residual risk</div><div class="v" style="color:${riskColor(residual)}">${residual}% <span style="font-size:10px;color:var(--faint);font-weight:500">from ${d.baselineRisk}%</span></div></div>
+        <div class="mm"><div class="k">Verified by</div><div class="v" style="font-size:12.5px">${d.source==='RedTeam'||d.source==='Scanner'?SRC[d.source].name:'Automated Red Teaming'}</div></div>
+      </div>
+      <div class="rembox" style="margin-top:12px"><div class="rl">Fix that shipped</div><div class="rv">${d.remediation.ships}</div></div>
+      <div class="rembox" style="margin-top:12px"><div class="rl">Verification</div><div class="rv">${d.verify.how}</div></div>
+      <div style="margin-top:12px;font-family:var(--mono);font-size:10.5px;color:var(--faint);letter-spacing:.02em">
+        Loop closed: ${d.technique} detected → translated → decided (${o.lbl.length>44?o.lbl.slice(0,44)+'…':o.lbl}) → shipped → re-verified. Added to the workspace MTTR rollup.
+      </div>
+    </div></div></div>`;
+}
+
+/* ---------- interactions ---------- */
+function chooseOpt(id,i){ state.prog[id].opt=i; render(); }
+function toggleOversight(id){ const p=state.prog[id]; p.oversight = p.oversight==='hitl'?'auto':'hitl'; render(); }
+function gotoStage(id,i){ const p=state.prog[id]; if(p.shipped) return; if(i<=p.stage) p.stage=i; render(); }
+function stepFwd(id){
+  const p=state.prog[id];
+  if(p.stage>=4){return;}
+  if(p.stage===3){ p.shipped=true; p.stage=4; }
+  else p.stage++;
+  render();
+}
+function stepBack(id){
+  const p=state.prog[id];
+  if(p.shipped){p.shipped=false;p.stage=3;}
+  else if(p.stage>0)p.stage--;
+  render();
+}
+function resetDet(id){
+  const d=DETECTIONS.find(x=>x.id===id);
+  const rec=d.options.findIndex(o=>o.rec);
+  state.prog[id]={stage:0,opt:rec<0?0:rec,oversight:'hitl',shipped:false,elapsed:0};
+  render();
+}
+
+/* ---------- master render ---------- */
+function render(){
+  renderQueue();
+  renderDetail();
+  refreshRollup();
+}
+render();
+</script>
+</body>
+</html>
